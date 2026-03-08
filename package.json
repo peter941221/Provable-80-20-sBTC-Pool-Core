@@ -1,0 +1,32 @@
+{
+  "name": "provable-80-20-sbtc-pool-core",
+  "version": "1.0.0",
+  "description": "Week 1 scaffold for the Provable 80/20 sBTC Pool Core.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "clarinet:check": "clarinet check",
+    "gen:isqrt": "python scripts/gen_isqrt_contract.py",
+    "gen:artifacts": "python scripts/gen_artifacts.py",
+    "gen:mxs": "python scripts/gen_mxs_manifest.py",
+    "artifacts:check": "python scripts/check_manifest.py",
+    "test": "vitest run",
+    "test:report": "vitest run -- --coverage --costs",
+    "test:unit": "vitest run tests/unit",
+    "test:differential": "vitest run tests/differential",
+    "mxs:check": "npm run gen:mxs && clarinet check -m Clarinet.mxs.toml -c",
+    "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\"",
+    "validate:week1": "npm run gen:isqrt && npm run gen:artifacts && npm run artifacts:check && npm run clarinet:check && npm run test:unit && npm run test:differential",
+    "validate:full": "npm run validate:week1 && npm run mxs:check"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@stacks/clarinet-sdk": "^3.9.0",
+    "@stacks/transactions": "^7.2.0",
+    "@types/node": "^24.4.0",
+    "chokidar-cli": "^3.0.0",
+    "vitest": "^4.0.7",
+    "vitest-environment-clarinet": "^3.0.0"
+  }
+}

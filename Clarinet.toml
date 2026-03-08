@@ -1,0 +1,57 @@
+[project]
+name = "provable-80-20-sbtc-pool-core"
+description = "Provable 80/20 sBTC Pool Core Week 1 scaffold"
+authors = ["Peter", "OpenAI Codex"]
+telemetry = false
+cache_dir = "./.cache"
+
+[[project.requirements]]
+contract_id = "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit"
+
+# [contracts.counter]
+# path = "contracts/counter.clar"
+# epoch = "latest"
+
+# Check-checker settings:
+# trusted_sender: if true, inputs are trusted after tx_sender has been checked.
+# trusted_caller: if true, inputs are trusted after contract-caller has been checked.
+# callee_filter: if true, untrusted data may be passed into a private function without a
+# warning, if it gets checked inside. This check will also propagate up to the
+# caller.
+# More informations: https://www.hiro.so/blog/new-safety-checks-in-clarinet
+
+[repl.analysis]
+passes = ["check_checker"]
+check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }
+
+[contracts]
+
+[contracts.sip-010-ft-trait]
+path = "contracts/sip-010-ft-trait.clar"
+clarity_version = 4
+epoch = "latest"
+
+[contracts.math-q32]
+path = "contracts/math-q32.clar"
+clarity_version = 4
+epoch = "latest"
+
+[contracts.isqrt64-generated]
+path = "contracts/isqrt64-generated.clar"
+clarity_version = 4
+epoch = "latest"
+
+[contracts.pool-80-20]
+path = "contracts/pool-80-20.clar"
+clarity_version = 4
+epoch = "latest"
+
+[contracts.mock-sbtc]
+path = "contracts/mock-sbtc.clar"
+clarity_version = 4
+epoch = "latest"
+
+[contracts.mock-quote]
+path = "contracts/mock-quote.clar"
+clarity_version = 4
+epoch = "latest"

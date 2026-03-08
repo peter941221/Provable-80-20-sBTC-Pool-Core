@@ -1,0 +1,16 @@
+**/settings/Mainnet.toml
+**/settings/Testnet.toml
+.cache/**
+__pycache__/
+*.pyc
+history.txt
+MEMORY.md
+RUNBOOK.md
+
+logs
+*.log
+npm-debug.log*
+coverage
+*.info
+costs-reports.json
+node_modules
