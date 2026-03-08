@@ -1,0 +1,18 @@
+{
+  "phase": "week2-swap-ready",
+  "status": "in-progress",
+  "claims": [
+    {
+      "id": "P0",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "P2",
+      "status": "planned"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "generated_by": "scripts/gen_artifacts.py",
+  "vectors": [
+    {
+      "id": "swap-sbtc-in-1000",
+      "direction": "sbtc-in",
+      "amount_in": 1000,
+      "amount_out_lower": 38905,
+      "amount_out_upper": 38906
+    },
+    {
+      "id": "swap-quote-in-2000",
+      "direction": "quote-in",
+      "amount_in": 2000,
+      "amount_out_lower": 49,
+      "amount_out_upper": 50
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "console": [
+    "Overview",
+    "Swap Verifier",
+    "Witness Explorer",
+    "LP Verifier",
+    "Safety & Bindings",
+    "Proof Status"
+  ],
+  "status": "week2-live-data",
+  "entry": "frontend/judge-console/index.html"
+}

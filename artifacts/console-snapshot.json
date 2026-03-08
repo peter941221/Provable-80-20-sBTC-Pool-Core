@@ -1,0 +1,18 @@
+{
+  "overview": {
+    "claim": "lower <= ideal <= upper",
+    "weights": "80/20",
+    "invariant": "x^4 * y = K"
+  },
+  "sample_swap": {
+    "amount_in": 1000,
+    "amount_in_effective": 997,
+    "amount_out_lower": 38905,
+    "amount_out_upper": 38906
+  },
+  "safety": {
+    "post_condition_mode": "Deny",
+    "guard_enabled": true,
+    "binding_status": "mock-sbtc + mock-quote"
+  }
+}
