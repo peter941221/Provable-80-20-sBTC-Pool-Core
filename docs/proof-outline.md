@@ -42,11 +42,14 @@ Current code supports future proofs because it already exposes:
 - write paths consume the lower bound
 - witness values explain how output bounds were derived
 - differential tests compare on-chain quote results with a Python model
+- Lean 4 workspace now builds successfully
+- initial P0 lemmas around arithmetic, root bounds, and lower/upper ordering are encoded in Lean
 
 ## What Is Not Yet Proved
 
 - full machine-checked proof bundle
 - full LP machine proof
+- full write-path reserve preservation proof
 - complete claim-to-artifact mapping beyond placeholder JSON
 
 ## Next Steps
