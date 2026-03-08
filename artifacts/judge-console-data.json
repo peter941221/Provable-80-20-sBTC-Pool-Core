@@ -1,0 +1,170 @@
+{
+  "source": "simnet-readonly",
+  "poolState": {
+    "type": "(tuple (reserve-quote uint) (reserve-sbtc uint) (share-supply uint))",
+    "value": {
+      "reserve-quote": {
+        "type": "uint",
+        "value": "2000000"
+      },
+      "reserve-sbtc": {
+        "type": "uint",
+        "value": "200000"
+      },
+      "share-supply": {
+        "type": "uint",
+        "value": "200000"
+      }
+    }
+  },
+  "quote": {
+    "type": "(response (tuple (amount-in-effective uint) (amount-out-lower uint) (amount-out-upper uint)) UnknownType)",
+    "value": {
+      "type": "(tuple (amount-in-effective uint) (amount-out-lower uint) (amount-out-upper uint))",
+      "value": {
+        "amount-in-effective": {
+          "type": "uint",
+          "value": "997"
+        },
+        "amount-out-lower": {
+          "type": "uint",
+          "value": "39387"
+        },
+        "amount-out-upper": {
+          "type": "uint",
+          "value": "39388"
+        }
+      }
+    },
+    "success": true
+  },
+  "witness": {
+    "type": "(response (tuple (amount-in uint) (amount-in-effective uint) (amount-out-lower uint) (amount-out-upper uint) (invariant uint) (next-reserve-in-pricing uint) (pricing-denominator uint) (reserve-in uint) (reserve-out uint) (reserve-out-after-lower uint) (reserve-out-after-upper uint) (trade-limit uint)) UnknownType)",
+    "value": {
+      "type": "(tuple (amount-in uint) (amount-in-effective uint) (amount-out-lower uint) (amount-out-upper uint) (invariant uint) (next-reserve-in-pricing uint) (pricing-denominator uint) (reserve-in uint) (reserve-out uint) (reserve-out-after-lower uint) (reserve-out-after-upper uint) (trade-limit uint))",
+      "value": {
+        "amount-in": {
+          "type": "uint",
+          "value": "1000"
+        },
+        "amount-in-effective": {
+          "type": "uint",
+          "value": "997"
+        },
+        "amount-out-lower": {
+          "type": "uint",
+          "value": "39387"
+        },
+        "amount-out-upper": {
+          "type": "uint",
+          "value": "39388"
+        },
+        "invariant": {
+          "type": "uint",
+          "value": "3200000000000000000000000000"
+        },
+        "next-reserve-in-pricing": {
+          "type": "uint",
+          "value": "200997"
+        },
+        "pricing-denominator": {
+          "type": "uint",
+          "value": "1632143355969632292081"
+        },
+        "reserve-in": {
+          "type": "uint",
+          "value": "200000"
+        },
+        "reserve-out": {
+          "type": "uint",
+          "value": "2000000"
+        },
+        "reserve-out-after-lower": {
+          "type": "uint",
+          "value": "1960612"
+        },
+        "reserve-out-after-upper": {
+          "type": "uint",
+          "value": "1960613"
+        },
+        "trade-limit": {
+          "type": "uint",
+          "value": "20000"
+        }
+      }
+    },
+    "success": true
+  },
+  "safety": {
+    "type": "(tuple (clarity4-guard-skeleton-enabled bool) (contract-hash-binding-enabled bool) (min-quote-reserve uint) (min-sbtc-reserve uint) (post-condition-mode-deny-required bool))",
+    "value": {
+      "clarity4-guard-skeleton-enabled": {
+        "type": "bool",
+        "value": true
+      },
+      "contract-hash-binding-enabled": {
+        "type": "bool",
+        "value": false
+      },
+      "min-quote-reserve": {
+        "type": "uint",
+        "value": "1000000"
+      },
+      "min-sbtc-reserve": {
+        "type": "uint",
+        "value": "100000"
+      },
+      "post-condition-mode-deny-required": {
+        "type": "bool",
+        "value": true
+      }
+    }
+  },
+  "binding": {
+    "type": "(tuple (quote-is-mock bool) (quote-token (optional principal)) (sbtc-is-mock bool) (sbtc-is-requirement bool) (sbtc-token (optional principal)))",
+    "value": {
+      "quote-is-mock": {
+        "type": "bool",
+        "value": true
+      },
+      "quote-token": {
+        "type": "(optional principal)",
+        "value": {
+          "type": "principal",
+          "value": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-quote"
+        }
+      },
+      "sbtc-is-mock": {
+        "type": "bool",
+        "value": true
+      },
+      "sbtc-is-requirement": {
+        "type": "bool",
+        "value": false
+      },
+      "sbtc-token": {
+        "type": "(optional principal)",
+        "value": {
+          "type": "principal",
+          "value": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-sbtc"
+        }
+      }
+    }
+  },
+  "sbtcHash": {
+    "type": "(response (buff 32) UnknownType)",
+    "value": {
+      "type": "(buff 32)",
+      "value": "0xc6f13a530c6e3e05c70eb1787c112f8fd8821e6c93a57a76d8aa5101945d0f6c"
+    },
+    "success": true
+  },
+  "quoteHash": {
+    "type": "(response (buff 32) UnknownType)",
+    "value": {
+      "type": "(buff 32)",
+      "value": "0x7831151ee058ae1f7e16a4537d92fa53445a26e2f4aff7225f0591be51b117e4"
+    },
+    "success": true
+  }
+}

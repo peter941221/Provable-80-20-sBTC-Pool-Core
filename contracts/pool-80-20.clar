@@ -14,8 +14,6 @@
 (define-constant ERR-SLIPPAGE u409)
 (define-constant ERR-LP-RATIO u410)
 (define-constant ERR-SHARE-AMOUNT u411)
-(define-constant ERR-NOT-IMPLEMENTED u499)
-
 (define-constant MIN-SBTC-RESERVE u100000)
 (define-constant MIN-QUOTE-RESERVE u1000000)
 (define-constant MAX-FEE-BPS u1000)
@@ -178,9 +176,9 @@
   )
 )
 
-(define-private (guard-transfer-in (token <ft-trait>) (asset-name (string-ascii 32)) (amount uint) (recipient principal))
+(define-private (guard-transfer-in (token <ft-trait>) (asset-name_ (string-ascii 32)) (amount uint) (recipient principal))
   (restrict-assets? tx-sender
-    ((with-ft (contract-of token) asset-name amount))
+    ((with-ft (contract-of token) asset-name_ amount))
     (try! (contract-call? token transfer amount tx-sender recipient none))
   )
 )
