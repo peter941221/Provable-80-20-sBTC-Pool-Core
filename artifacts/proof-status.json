@@ -4,7 +4,20 @@
   "claims": [
     {
       "id": "P0",
-      "status": "in-progress"
+      "status": "in-progress",
+      "checklist": [
+        "P0-A1",
+        "P0-A2",
+        "P0-A3",
+        "P0-B1",
+        "P0-B2",
+        "P0-B3",
+        "P0-C1",
+        "P0-C2",
+        "P0-C3",
+        "P0-C4"
+      ],
+      "workspace": "proof/"
     },
     {
       "id": "P1",

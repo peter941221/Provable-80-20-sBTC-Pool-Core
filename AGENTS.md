@@ -65,6 +65,9 @@ Project AGENTS
   - `docs/proof-outline.md`
   - `docs/demo-script.md`
   - `docs/pitch-outline.md`
+  - `proof/P0_CHECKLIST.md`
+  - `proof/lakefile.lean`
+  - `proof/Pool820/*.lean`
 - Current requirement wiring:
   - `Clarinet.toml` includes `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit`
   - simnet can read `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token`
@@ -128,4 +131,5 @@ Project AGENTS
 - `frontend/judge-console/` 当前是静态壳，不含真实链上读写 wiring。
 - `README.md` 当前已按 hackathon 首页结构补齐：What / Innovation / Stacks / Demo / Safety / Next Steps。
 - MXS 当前已有 `scripts/gen_mxs_manifest.py` + `npm run mxs:check` smoke 路径；尚未补固定场景断言。
+- `proof/` 当前已从占位目录升级为 Lean 4 scaffold；但仍是 theorem skeleton，不是 completed proof。
 - `pool-80-20.clar` 当前未实现：更严格的 hash-enforced binding、完整 live Judge Console wiring、MXS 场景级断言。
