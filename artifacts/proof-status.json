@@ -32,7 +32,10 @@
         "le_pow4_ceilRoot4",
         "lowerLeUpper_from_le",
         "sbtcIn_lower_le_upper",
+        "sbtcIn_lower_le_upper_from_formula",
         "quoteIn_lower_le_upper",
+        "swapWriteOutput_eq_lower",
+        "swapWriteOutput_le_upper",
         "write_uses_lower_bound"
       ],
       "checklist": [

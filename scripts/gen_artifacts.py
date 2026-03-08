@@ -16,17 +16,29 @@ def main() -> None:
     write_json(
         ARTIFACTS / "proof-status.json",
         {
-            "phase": "week2-swap-ready",
+            "phase": "week2-p0-proof-complete",
             "status": "in-progress",
             "claims": [
                 {
                     "id": "P0",
-                    "status": "in-progress",
+                    "status": "completed",
                     "build": {
                         "workspace": "proof/",
                         "command": "lake build",
                         "status": "passing"
                     },
+                    "items": [
+                        {"id": "P0-A1", "status": "proved", "theorems": ["pow4_monotone"]},
+                        {"id": "P0-A2", "status": "proved", "theorems": ["ceilDiv_ge_div"]},
+                        {"id": "P0-A3", "status": "proved", "theorems": ["saturatingSub_le_left", "saturatingSub_antitone_right"]},
+                        {"id": "P0-B1", "status": "proved", "theorems": ["floorRoot4_spec", "le_floorRoot4_of_pow4_le"]},
+                        {"id": "P0-B2", "status": "proved", "theorems": ["le_pow4_ceilRoot4", "floorRoot4_succ_pow4_gt"]},
+                        {"id": "P0-B3", "status": "proved", "theorems": ["ceilRoot4_of_exact", "ceilRoot4_of_inexact", "floorRoot4_le_ceilRoot4"]},
+                        {"id": "P0-C1", "status": "proved", "theorems": ["sbtcIn_lower_le_upper", "sbtcIn_lower_le_upper_from_formula"]},
+                        {"id": "P0-C2", "status": "proved", "theorems": ["swapWriteOutput_eq_lower", "write_uses_lower_bound"]},
+                        {"id": "P0-C3", "status": "proved", "theorems": ["quoteIn_lower_le_upper", "floorRoot4_input_le_ceilRoot4_input"]},
+                        {"id": "P0-C4", "status": "proved", "theorems": ["swapWriteOutput_le_upper"]}
+                    ],
                     "completed": [
                         "pow4_zero",
                         "pow4_one",
@@ -49,7 +61,10 @@ def main() -> None:
                         "le_pow4_ceilRoot4",
                         "lowerLeUpper_from_le"
                         ,"sbtcIn_lower_le_upper"
+                        ,"sbtcIn_lower_le_upper_from_formula"
                         ,"quoteIn_lower_le_upper"
+                        ,"swapWriteOutput_eq_lower"
+                        ,"swapWriteOutput_le_upper"
                         ,"write_uses_lower_bound"
                     ],
                     "checklist": [

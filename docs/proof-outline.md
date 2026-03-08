@@ -35,6 +35,7 @@ Current code supports future proofs because it already exposes:
 - differential reference model comparisons
 - a Lean 4 proof workspace scaffold in `proof/`
 - a P0 checklist in `proof/P0_CHECKLIST.md`
+- a theorem-to-claim mapping in `artifacts/proof-status.json`
 
 ## What Is Already Evidenced
 
@@ -44,13 +45,14 @@ Current code supports future proofs because it already exposes:
 - differential tests compare on-chain quote results with a Python model
 - Lean 4 workspace now builds successfully
 - initial P0 lemmas around arithmetic, root bounds, and lower/upper ordering are encoded in Lean
+- the current P0 checklist is mapped to theorem-level artifacts and marked complete for the current repo scope
 
 ## What Is Not Yet Proved
 
-- full machine-checked proof bundle
+- stronger P1 reserve safety claims
 - full LP machine proof
 - full write-path reserve preservation proof
-- complete claim-to-artifact mapping beyond placeholder JSON
+- broader end-to-end composition claims
 
 ## Next Steps
 

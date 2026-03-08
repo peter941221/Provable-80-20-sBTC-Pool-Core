@@ -29,6 +29,13 @@ theorem sbtcIn_lower_le_upper
       sbtcInAmountOutUpper reserveOut reserveOutAfterLower := by
   exact saturatingSub_antitone_right h
 
+theorem sbtcIn_lower_le_upper_from_formula
+    (reserveOut invariant denominator : Nat) :
+    sbtcInAmountOutLower reserveOut (ceilDiv invariant denominator) ≤
+      sbtcInAmountOutUpper reserveOut (invariant / denominator) := by
+  apply sbtcIn_lower_le_upper
+  exact ceilDiv_ge_div invariant denominator
+
 def quoteInAmountOutLower (reserveOut reserveOutAfterUpper : Nat) : Nat :=
   saturatingSub reserveOut reserveOutAfterUpper
 
@@ -43,15 +50,22 @@ theorem quoteIn_lower_le_upper
   apply saturatingSub_antitone_right
   exact floorRoot4_input_le_ceilRoot4_input h
 
+def swapWriteOutput (quote : SwapQuote) : Nat :=
+  quote.amountOutLower
+
+theorem swapWriteOutput_eq_lower (quote : SwapQuote) :
+    swapWriteOutput quote = quote.amountOutLower := by
+  rfl
+
+theorem swapWriteOutput_le_upper (quote : SwapQuote)
+    (h : lowerLeUpper quote) :
+    swapWriteOutput quote ≤ quote.amountOutUpper := by
+  exact h
+
 theorem write_uses_lower_bound
-    (quote : SwapQuote)
-    (hwrite : quote.amountOutLower = quote.amountOutLower) :
-    quote.amountOutLower ≤ quote.amountOutUpper ↔ lowerLeUpper quote := by
-  constructor
-  · intro h
-    exact h
-  · intro h
-    exact h
+    (quote : SwapQuote) :
+    swapWriteOutput quote = quote.amountOutLower := by
+  rfl
 
 /-
 P0 targets for this file:
