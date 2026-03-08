@@ -1,15 +1,95 @@
 {
-  "phase": "week2-swap-ready",
+  "phase": "week2-proof-engine-complete",
   "status": "in-progress",
   "claims": [
     {
       "id": "P0",
-      "status": "in-progress",
+      "status": "completed",
       "build": {
         "workspace": "proof/",
         "command": "lake build",
         "status": "passing"
       },
+      "items": [
+        {
+          "id": "P0-A1",
+          "status": "proved",
+          "theorems": [
+            "pow4_monotone"
+          ]
+        },
+        {
+          "id": "P0-A2",
+          "status": "proved",
+          "theorems": [
+            "ceilDiv_ge_div"
+          ]
+        },
+        {
+          "id": "P0-A3",
+          "status": "proved",
+          "theorems": [
+            "saturatingSub_le_left",
+            "saturatingSub_antitone_right"
+          ]
+        },
+        {
+          "id": "P0-B1",
+          "status": "proved",
+          "theorems": [
+            "floorRoot4_spec",
+            "le_floorRoot4_of_pow4_le"
+          ]
+        },
+        {
+          "id": "P0-B2",
+          "status": "proved",
+          "theorems": [
+            "le_pow4_ceilRoot4",
+            "floorRoot4_succ_pow4_gt"
+          ]
+        },
+        {
+          "id": "P0-B3",
+          "status": "proved",
+          "theorems": [
+            "ceilRoot4_of_exact",
+            "ceilRoot4_of_inexact",
+            "floorRoot4_le_ceilRoot4"
+          ]
+        },
+        {
+          "id": "P0-C1",
+          "status": "proved",
+          "theorems": [
+            "sbtcIn_lower_le_upper",
+            "sbtcIn_lower_le_upper_from_formula"
+          ]
+        },
+        {
+          "id": "P0-C2",
+          "status": "proved",
+          "theorems": [
+            "swapWriteOutput_eq_lower",
+            "write_uses_lower_bound"
+          ]
+        },
+        {
+          "id": "P0-C3",
+          "status": "proved",
+          "theorems": [
+            "quoteIn_lower_le_upper",
+            "floorRoot4_input_le_ceilRoot4_input"
+          ]
+        },
+        {
+          "id": "P0-C4",
+          "status": "proved",
+          "theorems": [
+            "swapWriteOutput_le_upper"
+          ]
+        }
+      ],
       "completed": [
         "pow4_zero",
         "pow4_one",
@@ -54,11 +134,54 @@
     },
     {
       "id": "P1",
-      "status": "planned"
+      "status": "completed",
+      "items": [
+        {
+          "id": "P1-R1",
+          "status": "proved",
+          "theorems": [
+            "legalSwapSbtcIn_preserves_min",
+            "legalSwapQuoteIn_preserves_min"
+          ]
+        },
+        {
+          "id": "P1-L1",
+          "status": "proved",
+          "theorems": [
+            "addLiquidity_share_closed",
+            "removeLiquidity_share_closed"
+          ]
+        },
+        {
+          "id": "P1-L2",
+          "status": "proved",
+          "theorems": [
+            "addLiquidity_reserves_increase",
+            "removeLiquidity_reserves_decrease"
+          ]
+        }
+      ]
     },
     {
       "id": "P2",
-      "status": "planned"
+      "status": "completed",
+      "items": [
+        {
+          "id": "P2-C1",
+          "status": "proved",
+          "theorems": [
+            "compose_sbtc_then_quote_preserves_mins"
+          ]
+        },
+        {
+          "id": "P2-C2",
+          "status": "proved",
+          "theorems": [
+            "add_remove_roundtrip_exact",
+            "add_remove_roundtrip_preserves_state_exact"
+          ]
+        }
+      ]
     }
   ]
 }

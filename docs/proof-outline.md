@@ -46,13 +46,14 @@ Current code supports future proofs because it already exposes:
 - Lean 4 workspace now builds successfully
 - initial P0 lemmas around arithmetic, root bounds, and lower/upper ordering are encoded in Lean
 - the current P0 checklist is mapped to theorem-level artifacts and marked complete for the current repo scope
+- current P1 reserve / LP structural claims are encoded in Lean and marked complete for the current repo scope
+- current P2 composition claims are encoded in Lean and marked complete for the current repo scope
 
 ## What Is Not Yet Proved
 
-- stronger P1 reserve safety claims
-- full LP machine proof
-- full write-path reserve preservation proof
-- broader end-to-end composition claims
+- stricter theorem-to-contract path equivalence for every helper
+- stronger reserve preservation claims with fewer assumptions
+- broader end-to-end composition claims over longer sequences
 
 ## Next Steps
 

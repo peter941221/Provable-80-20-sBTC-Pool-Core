@@ -16,7 +16,7 @@ Project AGENTS
 
 - Project name: `Provable 80-20 sBTC Pool Core`
 - Main goal: 定义并后续实现一个运行在 Stacks / Clarity 上的、可运行、可证明、可演示的 `80/20 sBTC` weighted AMM 核心。
-- Current phase: `week2-p0-proof-complete`
+- Current phase: `week2-proof-engine-complete`
 - Primary outcome Peter cares about: `first-place hackathon impact + correctness + demo readiness`
 - Main constraints:
   - 当前仓库是文档型工作区，尚未脚手架化为 Clarinet 项目
@@ -25,7 +25,7 @@ Project AGENTS
 
 ## 2) Working Commands
 
-- Current workspace state: 已完成双向 swap、LP add/remove、reference model、Judge Console 真实只读导出、README 与提交物文档、MXS smoke、P0 proof build + theorem 映射
+- Current workspace state: 已完成双向 swap、LP add/remove、reference model、Judge Console 真实只读导出、README 与提交物文档、MXS smoke、P0/P1/P2 proof build + theorem 映射
 - Working commands:
   - `python scripts/gen_isqrt_contract.py`
   - `python scripts/gen_artifacts.py`
@@ -135,5 +135,5 @@ Project AGENTS
 - MXS 当前已有 `scripts/gen_mxs_manifest.py` + `npm run mxs:check` smoke 路径；尚未补固定场景断言。
 - `proof/` 当前已从占位目录升级为 Lean 4 workspace，并已有可编译 theorem。
 - 当前环境已安装 Lean 4 / Lake；`cd proof && lake build` 已通过。
-- 当前 P0 proof checklist 已映射到 theorem 级别，并在 `artifacts/proof-status.json` 标记为 completed。
+- 当前 P0/P1/P2 proof claims 已映射到 theorem 级别，并在 `artifacts/proof-status.json` 标记为 completed。
 - `pool-80-20.clar` 当前未实现：更严格的 hash-enforced binding、完整 live Judge Console wiring、MXS 场景级断言。

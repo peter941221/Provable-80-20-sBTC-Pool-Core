@@ -16,7 +16,7 @@ def main() -> None:
     write_json(
         ARTIFACTS / "proof-status.json",
         {
-            "phase": "week2-p0-proof-complete",
+            "phase": "week2-proof-engine-complete",
             "status": "in-progress",
             "claims": [
                 {
@@ -81,8 +81,23 @@ def main() -> None:
                     ],
                     "workspace": "proof/",
                 },
-                {"id": "P1", "status": "planned"},
-                {"id": "P2", "status": "planned"},
+                {
+                    "id": "P1",
+                    "status": "completed",
+                    "items": [
+                        {"id": "P1-R1", "status": "proved", "theorems": ["legalSwapSbtcIn_preserves_min", "legalSwapQuoteIn_preserves_min"]},
+                        {"id": "P1-L1", "status": "proved", "theorems": ["addLiquidity_share_closed", "removeLiquidity_share_closed"]},
+                        {"id": "P1-L2", "status": "proved", "theorems": ["addLiquidity_reserves_increase", "removeLiquidity_reserves_decrease"]}
+                    ]
+                },
+                {
+                    "id": "P2",
+                    "status": "completed",
+                    "items": [
+                        {"id": "P2-C1", "status": "proved", "theorems": ["compose_sbtc_then_quote_preserves_mins"]},
+                        {"id": "P2-C2", "status": "proved", "theorems": ["add_remove_roundtrip_exact", "add_remove_roundtrip_preserves_state_exact"]}
+                    ]
+                },
             ],
         },
     )
