@@ -58,7 +58,9 @@ async function hydrate() {
     bodies[2].textContent = `effective=${snapshot.sample_swap.amount_in_effective}, lower=${snapshot.sample_swap.amount_out_lower}, upper=${snapshot.sample_swap.amount_out_upper}`;
     bodies[3].textContent = "LP add/remove is implemented on-chain; panel wiring is next for live view.";
     bodies[4].textContent = `${snapshot.safety.post_condition_mode} + guard=${snapshot.safety.guard_enabled} + ${snapshot.safety.binding_status}`;
-    bodies[5].textContent = `${manifest.status}; P0=${proof.claims[0].status}, P1=${proof.claims[1].status}, P2=${proof.claims[2].status}`;
+    const completed = proof.claims[0].completed?.length ?? 0;
+    const checklist = proof.claims[0].checklist?.length ?? 0;
+    bodies[5].textContent = `${manifest.status}; P0=${proof.claims[0].status} (${completed}/${checklist} theorem items scaffolded or proved), P1=${proof.claims[1].status}, P2=${proof.claims[2].status}`;
   } catch (error) {
     const panel = document.createElement("p");
     panel.textContent = `Artifact load skipped: ${error.message}`;

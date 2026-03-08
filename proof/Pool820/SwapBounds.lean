@@ -12,6 +12,10 @@ structure SwapQuote where
 def lowerLeUpper (quote : SwapQuote) : Prop :=
   quote.amountOutLower ≤ quote.amountOutUpper
 
+theorem lowerLeUpper_from_le (quote : SwapQuote)
+    (h : quote.amountOutLower ≤ quote.amountOutUpper) : lowerLeUpper quote := by
+  exact h
+
 /-
 P0 targets for this file:
 

@@ -22,6 +22,23 @@ def main() -> None:
                 {
                     "id": "P0",
                     "status": "in-progress",
+                    "build": {
+                        "workspace": "proof/",
+                        "command": "lake build",
+                        "status": "passing"
+                    },
+                    "completed": [
+                        "pow4_zero",
+                        "pow4_one",
+                        "ceilDiv_zero_left",
+                        "saturatingSub_zero",
+                        "saturatingSub_le_left",
+                        "pow4_monotone",
+                        "pow4_eq_square_square",
+                        "ceilRoot4_of_exact",
+                        "ceilRoot4_of_inexact",
+                        "lowerLeUpper_from_le"
+                    ],
                     "checklist": [
                         "P0-A1",
                         "P0-A2",

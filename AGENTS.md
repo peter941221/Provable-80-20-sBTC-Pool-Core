@@ -33,6 +33,8 @@ Project AGENTS
   - `clarinet check`
   - `vitest run tests/unit`
   - `vitest run tests/differential`
+  - `cd proof && lake build`
+  - `npm run proof:build`
   - `npm run validate:week1`
 - Key environment notes:
   - 若接入官方 `sBTC` requirement，需使用支持该能力的较新 Clarinet 版本
@@ -132,4 +134,5 @@ Project AGENTS
 - `README.md` 当前已按 hackathon 首页结构补齐：What / Innovation / Stacks / Demo / Safety / Next Steps。
 - MXS 当前已有 `scripts/gen_mxs_manifest.py` + `npm run mxs:check` smoke 路径；尚未补固定场景断言。
 - `proof/` 当前已从占位目录升级为 Lean 4 scaffold；但仍是 theorem skeleton，不是 completed proof。
+- 当前环境已安装 Lean 4 / Lake；`cd proof && lake build` 已通过。
 - `pool-80-20.clar` 当前未实现：更严格的 hash-enforced binding、完整 live Judge Console wiring、MXS 场景级断言。

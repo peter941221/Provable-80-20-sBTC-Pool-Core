@@ -11,6 +11,14 @@ def ceilRoot4 (value : Nat) : Nat :=
   let lower := floorRoot4 value
   if pow4 lower = value then lower else lower + 1
 
+theorem ceilRoot4_of_exact (value : Nat) (h : pow4 (floorRoot4 value) = value) :
+    ceilRoot4 value = floorRoot4 value := by
+  simp [ceilRoot4, h]
+
+theorem ceilRoot4_of_inexact (value : Nat) (h : pow4 (floorRoot4 value) ≠ value) :
+    ceilRoot4 value = floorRoot4 value + 1 := by
+  simp [ceilRoot4, h]
+
 /-
 This file is a scaffold, not a completed proof.
 
