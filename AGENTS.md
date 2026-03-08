@@ -16,7 +16,7 @@ Project AGENTS
 
 - Project name: `Provable 80-20 sBTC Pool Core`
 - Main goal: 定义并后续实现一个运行在 Stacks / Clarity 上的、可运行、可证明、可演示的 `80/20 sBTC` weighted AMM 核心。
-- Current phase: `week2-swap-ready`
+- Current phase: `week2-submission-readying`
 - Primary outcome Peter cares about: `first-place hackathon impact + correctness + demo readiness`
 - Main constraints:
   - 当前仓库是文档型工作区，尚未脚手架化为 Clarinet 项目
@@ -25,7 +25,7 @@ Project AGENTS
 
 ## 2) Working Commands
 
-- Current workspace state: 已完成双向 swap 写路径、quote/witness 只读路径、绑定状态接口、reference model 差分测试、Judge Console 静态壳
+- Current workspace state: 已完成双向 swap、LP add/remove、reference model、Judge Console 静态壳、README 与提交物文档初稿、MXS smoke 入口
 - Working commands:
   - `python scripts/gen_isqrt_contract.py`
   - `python scripts/gen_artifacts.py`
@@ -60,6 +60,11 @@ Project AGENTS
   - `frontend/judge-console/index.html`
   - `frontend/judge-console/app.js`
   - `frontend/judge-console/style.css`
+  - `README.md`
+  - `docs/security-model.md`
+  - `docs/proof-outline.md`
+  - `docs/demo-script.md`
+  - `docs/pitch-outline.md`
 - Current requirement wiring:
   - `Clarinet.toml` includes `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit`
   - simnet can read `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token`
@@ -117,7 +122,10 @@ Project AGENTS
 - 当前第一名主线：`P0 必达 + P1 全力完成 + Witness 可视化 + sBTC requirement + MXS + 评分导向提交物`。
 - `isqrt64-generated.clar` 由 `scripts/gen_isqrt_contract.py` 生成；若手改该文件，必须重跑生成并检查无 diff。
 - `pool-80-20.clar` 当前已实现：初始化 guard、`quote-sbtc-in`、`quote-quote-in`、`debug-sbtc-in`、`debug-quote-in`、`swap-sbtc-in`、`swap-quote-in`、binding status、contract hash 读取。
+- `pool-80-20.clar` 当前已实现：比例 `add-liquidity` / `remove-liquidity`。
 - swap 写路径当前采用“完整输入入池 + lower bound 输出”更新储备，符合 `tech_plan.md` 的保守舍入主线。
 - 当前差分基线来自 `sim/reference_model.py`，并由 `tests/differential/reference-model.test.ts` 对链上 quote 做样本对比。
 - `frontend/judge-console/` 当前是静态壳，不含真实链上读写 wiring。
-- `pool-80-20.clar` 当前未实现：LP add/remove、真实 output guard 全覆盖收口、资产绑定哈希 enforcement、MXS 场景。
+- `README.md` 当前已按 hackathon 首页结构补齐：What / Innovation / Stacks / Demo / Safety / Next Steps。
+- MXS 当前已有 `scripts/gen_mxs_manifest.py` + `npm run mxs:check` smoke 路径；尚未补固定场景断言。
+- `pool-80-20.clar` 当前未实现：更严格的 hash-enforced binding、完整 live Judge Console wiring、MXS 场景级断言。
