@@ -20,24 +20,27 @@
 3. Show Swap Verifier panel
 4. Show Witness Explorer panel
 5. Execute or describe one matching write-path swap
-6. Show Safety & Bindings panel
+6. Show Safety & Bindings panel, including the explicit math-domain envelope
 
 ## 5 Minutes
 
 1. Show sBTC requirement wiring
-2. Show MXS manifest generation and smoke check command
-3. Show differential test result against Python reference model
-4. Close with why fixed 80/20 is the correct hackathon tradeoff
+2. Show MXS manifest generation and fixed-height assertion command
+3. Show the claim matrix tying claims to theorem / test / artifact evidence
+4. Show LP safety: `lp-balances` makes withdrawals require LP share ownership
+5. Show resilience evidence: degraded artifact + live readonly fallback + chaos report
+6. Close with why fixed 80/20 is the correct hackathon tradeoff
 
 ## Commands
 
 ```bash
 npm run validate:full
+npm run validate:chaos
 python scripts/gen_mxs_manifest.py
 ```
 
 ## Next Steps
 
 1. Add screenshots or gifs for each panel
-2. Tie each spoken claim to one artifact or test
-3. Record a clean 5-minute walkthrough after final UI wiring
+2. Record one clean live-readonly walkthrough using a deployed contract principal
+3. Extend pipeline-drift chaos only if it reduces demo-day risk

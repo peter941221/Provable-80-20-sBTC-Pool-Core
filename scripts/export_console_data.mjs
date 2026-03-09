@@ -52,6 +52,12 @@ const safety = simnet.callReadOnlyFn("pool-80-20", "get-safety-envelope", [], de
 const binding = simnet.callReadOnlyFn("pool-80-20", "get-binding-status", [], deployer);
 const sbtcHash = simnet.callReadOnlyFn("pool-80-20", "get-sbtc-contract-hash", [], deployer);
 const quoteHash = simnet.callReadOnlyFn("pool-80-20", "get-quote-contract-hash", [], deployer);
+const lpBalance = simnet.callReadOnlyFn(
+  "pool-80-20",
+  "get-lp-balance",
+  [Cl.standardPrincipal(deployer)],
+  deployer,
+);
 
 const output = {
   source: "simnet-readonly",
@@ -62,6 +68,7 @@ const output = {
   binding: cvToJSON(binding.result),
   sbtcHash: cvToJSON(sbtcHash.result),
   quoteHash: cvToJSON(quoteHash.result),
+  lpBalance: unwrapResult(lpBalance),
 };
 
 await mkdir(artifactsDir, { recursive: true });

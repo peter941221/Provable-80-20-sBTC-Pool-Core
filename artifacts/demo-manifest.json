@@ -5,8 +5,9 @@
     "Witness Explorer",
     "LP Verifier",
     "Safety & Bindings",
+    "Chaos Summary",
     "Proof Status"
   ],
-  "status": "week2-live-data",
+  "status": "week2-live-readonly-evidence-pack",
   "entry": "frontend/judge-console/index.html"
 }

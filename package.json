@@ -16,10 +16,14 @@
     "test:report": "vitest run -- --coverage --costs",
     "test:unit": "vitest run tests/unit",
     "test:differential": "vitest run tests/differential",
+    "test:mxs": "vitest run tests/mxs -- --manifest ./Clarinet.mxs.toml",
+    "test:chaos": "vitest run tests/chaos",
     "mxs:check": "npm run gen:mxs && clarinet check -m Clarinet.mxs.toml -c",
+    "chaos:report": "node scripts/gen_chaos_report.mjs",
     "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\"",
     "validate:week1": "npm run gen:isqrt && npm run gen:artifacts && npm run gen:console && npm run artifacts:check && npm run clarinet:check && npm run test:unit && npm run test:differential",
-    "validate:full": "npm run validate:week1 && npm run mxs:check && npm run proof:build"
+    "validate:chaos": "npm run validate:week1 && npm run chaos:report && npm run test:chaos",
+    "validate:full": "npm run validate:chaos && npm run mxs:check && npm run test:mxs && npm run proof:build"
   },
   "author": "",
   "license": "ISC",

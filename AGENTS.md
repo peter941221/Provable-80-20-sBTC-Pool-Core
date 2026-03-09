@@ -16,7 +16,7 @@ Project AGENTS
 
 - Project name: `Provable 80-20 sBTC Pool Core`
 - Main goal: 定义并后续实现一个运行在 Stacks / Clarity 上的、可运行、可证明、可演示的 `80/20 sBTC` weighted AMM 核心。
-- Current phase: `week2-proof-engine-complete`
+- Current phase: `week2-live-readonly-evidence-pack`
 - Primary outcome Peter cares about: `first-place hackathon impact + correctness + demo readiness`
 - Main constraints:
   - 当前仓库是文档型工作区，尚未脚手架化为 Clarinet 项目
@@ -25,7 +25,7 @@ Project AGENTS
 
 ## 2) Working Commands
 
-- Current workspace state: 已完成双向 swap、LP add/remove、reference model、Judge Console 真实只读导出、README 与提交物文档、MXS smoke、P0/P1/P2 proof build + theorem 映射
+- Current workspace state: 已完成双向 swap、LP add/remove + `lp-balances` 份额账、reference model、Judge Console 真实只读导出 + 浏览器 live readonly（失败自动 fallback）、README 与提交物文档、MXS 固定高度断言、P0/P1/P2 proof build + theorem 映射，并已加入显式 `uint128` 数学域保护与边界测试、claim matrix、以及 chaos L1~L5 自动化与 `artifacts/chaos-report.json`
 - Working commands:
   - `python scripts/gen_isqrt_contract.py`
   - `python scripts/gen_artifacts.py`
@@ -33,9 +33,13 @@ Project AGENTS
   - `clarinet check`
   - `vitest run tests/unit`
   - `vitest run tests/differential`
+  - `vitest run tests/chaos`
+  - `node scripts/gen_chaos_report.mjs`
   - `cd proof && lake build`
   - `npm run proof:build`
   - `npm run validate:week1`
+  - `npm run validate:chaos`
+  - `npm run validate:full`
 - Key environment notes:
   - 若接入官方 `sBTC` requirement，需使用支持该能力的较新 Clarinet 版本
   - 若启用 MXS，需固定主网高度；有条件时配置 `HIRO_API_KEY`
@@ -43,6 +47,8 @@ Project AGENTS
 ## 3) Repo Map
 
 - Current canonical planning doc: `tech_plan.md`
+- Latest submission hardening plan: `最终强化方案.TXT`
+- Chaos engineering plan: `混沌工程.TXT`
 - Week 1 core contracts:
   - `contracts/sip-010-ft-trait.clar`
   - `contracts/math-q32.clar`
@@ -54,7 +60,9 @@ Project AGENTS
   - `scripts/gen_isqrt_contract.py`
   - `scripts/gen_artifacts.py`
   - `scripts/check_manifest.py`
+  - `scripts/gen_chaos_report.mjs`
   - `tests/unit/`
+  - `tests/chaos/`
   - `artifacts/`
 - Week 2 added files:
   - `sim/reference_model.py`
@@ -67,6 +75,7 @@ Project AGENTS
   - `docs/proof-outline.md`
   - `docs/demo-script.md`
   - `docs/pitch-outline.md`
+  - `docs/chaos-matrix.md`
   - `proof/P0_CHECKLIST.md`
   - `proof/lakefile.lean`
   - `proof/Pool820/*.lean`
@@ -128,12 +137,16 @@ Project AGENTS
 - `isqrt64-generated.clar` 由 `scripts/gen_isqrt_contract.py` 生成；若手改该文件，必须重跑生成并检查无 diff。
 - `pool-80-20.clar` 当前已实现：初始化 guard、`quote-sbtc-in`、`quote-quote-in`、`debug-sbtc-in`、`debug-quote-in`、`swap-sbtc-in`、`swap-quote-in`、binding status、contract hash 读取。
 - `pool-80-20.clar` 当前已实现：比例 `add-liquidity` / `remove-liquidity`。
+- `pool-80-20.clar` 当前已实现：显式 `uint128` 数学域保护，覆盖 initialize / swap / LP 状态转移，并对 `ceil-div` 使用 overflow-safe 实现。
 - swap 写路径当前采用“完整输入入池 + lower bound 输出”更新储备，符合 `tech_plan.md` 的保守舍入主线。
 - 当前差分基线来自 `sim/reference_model.py`，并由 `tests/differential/reference-model.test.ts` 对链上 quote 做样本对比。
-- `frontend/judge-console/` 当前是静态壳，不含真实链上读写 wiring。
+- `frontend/judge-console/` 当前已支持 artifact hydration + 浏览器 live readonly，并带 source badge / fallback 路径。
 - `README.md` 当前已按 hackathon 首页结构补齐：What / Innovation / Stacks / Demo / Safety / Next Steps。
-- MXS 当前已有 `scripts/gen_mxs_manifest.py` + `npm run mxs:check` smoke 路径；尚未补固定场景断言。
+- MXS 当前已有 `scripts/gen_mxs_manifest.py` + `npm run mxs:check` + `npm run test:mxs`，并已补固定高度断言。
 - `proof/` 当前已从占位目录升级为 Lean 4 workspace，并已有可编译 theorem。
 - 当前环境已安装 Lean 4 / Lake；`cd proof && lake build` 已通过。
 - 当前 P0/P1/P2 proof claims 已映射到 theorem 级别，并在 `artifacts/proof-status.json` 标记为 completed。
-- `pool-80-20.clar` 当前未实现：更严格的 hash-enforced binding、完整 live Judge Console wiring、MXS 场景级断言。
+- 当前已新增 `HashBinding.lean`，`hash-binding` theorem slice 已进入 proof artifacts 与 claim matrix。
+- 最新交付冲刺清单在根目录 `最终强化方案.TXT`（2026-03-09）；先补 P0 合约硬洞，再做 chaos / packaging。
+- 已修复 P0 硬洞（2026-03-09）：引入 `lp-balances` 并在 `remove-liquidity` 强制校验；hash-binding 已覆盖所有写路径（swap/add/remove + push-out helpers）。
+- 混沌工程第一阶段路线在根目录 `混沌工程.TXT`；当前已落地 L1~L5（artifact / live fallback / MXS remote-data 分类 / boundary sequence / pipeline drift），后续优先考虑 nightly/CI 持续化（P2）。

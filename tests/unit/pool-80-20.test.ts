@@ -1,18 +1,49 @@
 import { describe, expect, it } from "vitest";
 import { Cl } from "@stacks/transactions";
-import { contractPrincipal, deployer } from "../helpers";
+import { contractPrincipal, deployer, wallet1 } from "../helpers";
 
-function seedInitialBalances() {
+const MAX_SAFE_SBTC_AT_MIN_QUOTE = 135818791n;
+const MAX_SAFE_QUOTE_AT_MIN_SBTC = 3402823669209384634n;
+
+function seedBalances(
+  sbtcAmount: bigint = 500000000n,
+  quoteAmount: bigint = 500000000n,
+) {
   simnet.callPublicFn(
     "mock-sbtc",
     "mint",
-    [Cl.uint(500000000), Cl.standardPrincipal(deployer)],
+    [Cl.uint(sbtcAmount), Cl.standardPrincipal(deployer)],
     deployer,
   );
   simnet.callPublicFn(
     "mock-quote",
     "mint",
-    [Cl.uint(500000000), Cl.standardPrincipal(deployer)],
+    [Cl.uint(quoteAmount), Cl.standardPrincipal(deployer)],
+    deployer,
+  );
+}
+
+function seedInitialBalances() {
+  seedBalances();
+}
+
+function initializePoolWithAmounts(
+  initialSbtc: bigint,
+  initialQuote: bigint,
+  poolFeeBps: bigint = 30n,
+  poolMaxTradeBps: bigint = 1000n,
+) {
+  return simnet.callPublicFn(
+    "pool-80-20",
+    "initialize",
+    [
+      contractPrincipal("mock-sbtc"),
+      contractPrincipal("mock-quote"),
+      Cl.uint(initialSbtc),
+      Cl.uint(initialQuote),
+      Cl.uint(poolFeeBps),
+      Cl.uint(poolMaxTradeBps),
+    ],
     deployer,
   );
 }
@@ -20,37 +51,13 @@ function seedInitialBalances() {
 function initializePool() {
   seedInitialBalances();
 
-  return simnet.callPublicFn(
-    "pool-80-20",
-    "initialize",
-    [
-      contractPrincipal("mock-sbtc"),
-      contractPrincipal("mock-quote"),
-      Cl.uint(100000),
-      Cl.uint(1000000),
-      Cl.uint(30),
-      Cl.uint(1000),
-    ],
-    deployer,
-  );
+  return initializePoolWithAmounts(100000n, 1000000n);
 }
 
 function initializePoolWithBuffer() {
   seedInitialBalances();
 
-  return simnet.callPublicFn(
-    "pool-80-20",
-    "initialize",
-    [
-      contractPrincipal("mock-sbtc"),
-      contractPrincipal("mock-quote"),
-      Cl.uint(200000),
-      Cl.uint(2000000),
-      Cl.uint(30),
-      Cl.uint(1000),
-    ],
-    deployer,
-  );
+  return initializePoolWithAmounts(200000n, 2000000n);
 }
 
 describe("pool-80-20 shell", () => {
@@ -80,26 +87,75 @@ describe("pool-80-20 shell", () => {
 
     expect(poolSbtcBalance.result).toBeOk(Cl.uint(100000));
     expect(poolQuoteBalance.result).toBeOk(Cl.uint(1000000));
+
+    const lpBalance = simnet.callReadOnlyFn(
+      "pool-80-20",
+      "get-lp-balance",
+      [Cl.standardPrincipal(deployer)],
+      deployer,
+    );
+
+    expect(lpBalance.result).toEqual(
+      Cl.tuple({
+        owner: Cl.standardPrincipal(deployer),
+        balance: Cl.uint(100000),
+      }),
+    );
   });
 
   it("rejects re-initialization", () => {
     initializePool();
 
-    const second = simnet.callPublicFn(
+    const second = initializePoolWithAmounts(100000n, 1000000n);
+
+    expect(second.result).toBeErr(Cl.uint(400));
+  });
+
+  it("exposes the explicit math-domain guard in the safety envelope", () => {
+    initializePool();
+
+    const safetyEnvelope = simnet.callReadOnlyFn(
       "pool-80-20",
-      "initialize",
-      [
-        contractPrincipal("mock-sbtc"),
-        contractPrincipal("mock-quote"),
-        Cl.uint(100000),
-        Cl.uint(1000000),
-        Cl.uint(30),
-        Cl.uint(1000),
-      ],
+      "get-safety-envelope",
+      [],
       deployer,
     );
 
-    expect(second.result).toBeErr(Cl.uint(400));
+    expect(safetyEnvelope.result).toEqual(
+      Cl.tuple({
+        "min-sbtc-reserve": Cl.uint(100000),
+        "min-quote-reserve": Cl.uint(1000000),
+        "post-condition-mode-deny-required": Cl.bool(true),
+        "contract-hash-binding-enabled": Cl.bool(true),
+        "clarity4-guard-skeleton-enabled": Cl.bool(true),
+        "math-domain-guard-enabled": Cl.bool(true),
+        "max-safe-pow4-input": Cl.uint(4294967295n),
+        "max-safe-sbtc-at-min-quote": Cl.uint(MAX_SAFE_SBTC_AT_MIN_QUOTE),
+      }),
+    );
+  });
+
+  it("allows the safe reserve frontier and rejects one step beyond it", () => {
+    seedBalances(MAX_SAFE_SBTC_AT_MIN_QUOTE, 1000000n);
+
+    const frontier = initializePoolWithAmounts(
+      MAX_SAFE_SBTC_AT_MIN_QUOTE,
+      1000000n,
+    );
+
+    expect(frontier.result).toBeOk(Cl.bool(true));
+  });
+
+  it("rejects initialization outside the explicit math domain", () => {
+    seedBalances(MAX_SAFE_SBTC_AT_MIN_QUOTE + 1n, 1000000n);
+
+    const init = initializePoolWithAmounts(
+      MAX_SAFE_SBTC_AT_MIN_QUOTE + 1n,
+      1000000n,
+    );
+
+    expect(init.result).toBeErr(Cl.uint(412));
+    expect(simnet.getDataVar("pool-80-20", "initialized")).toBeBool(false);
   });
 
   it("returns conservative sbtc-in quotes and witness", () => {
@@ -245,6 +301,34 @@ describe("pool-80-20 shell", () => {
     expect(simnet.getDataVar("pool-80-20", "reserve-quote")).toBeUint(2002000);
   });
 
+  it("rejects sbtc-in writes that would leave the explicit math domain", () => {
+    seedBalances(MAX_SAFE_SBTC_AT_MIN_QUOTE + 1n, 1000000n);
+    initializePoolWithAmounts(MAX_SAFE_SBTC_AT_MIN_QUOTE, 1000000n);
+
+    const swap = simnet.callPublicFn(
+      "pool-80-20",
+      "swap-sbtc-in",
+      [Cl.uint(1), Cl.uint(0)],
+      deployer,
+    );
+
+    expect(swap.result).toBeErr(Cl.uint(412));
+  });
+
+  it("rejects quote-in writes that would leave the explicit math domain", () => {
+    seedBalances(100000n, MAX_SAFE_QUOTE_AT_MIN_SBTC + 1n);
+    initializePoolWithAmounts(100000n, MAX_SAFE_QUOTE_AT_MIN_SBTC);
+
+    const swap = simnet.callPublicFn(
+      "pool-80-20",
+      "swap-quote-in",
+      [Cl.uint(1), Cl.uint(0)],
+      deployer,
+    );
+
+    expect(swap.result).toBeErr(Cl.uint(412));
+  });
+
   it("exposes binding status and contract hashes", () => {
     initializePool();
 
@@ -274,6 +358,8 @@ describe("pool-80-20 shell", () => {
         "sbtc-is-mock": Cl.bool(true),
         "sbtc-is-requirement": Cl.bool(false),
         "quote-is-mock": Cl.bool(true),
+        "sbtc-hash-bound": Cl.bool(true),
+        "quote-hash-bound": Cl.bool(true),
       }),
     );
     expect(sbtcHash.result).toBeOk(expect.anything());
@@ -298,6 +384,20 @@ describe("pool-80-20 shell", () => {
         "share-supply": Cl.uint(201000),
       }),
     );
+  });
+
+  it("rejects proportional liquidity additions that would leave the explicit math domain", () => {
+    seedBalances(MAX_SAFE_SBTC_AT_MIN_QUOTE * 2n, 2000000n);
+    initializePoolWithAmounts(MAX_SAFE_SBTC_AT_MIN_QUOTE, 1000000n);
+
+    const result = simnet.callPublicFn(
+      "pool-80-20",
+      "add-liquidity",
+      [Cl.uint(MAX_SAFE_SBTC_AT_MIN_QUOTE), Cl.uint(1000000n)],
+      deployer,
+    );
+
+    expect(result.result).toBeErr(Cl.uint(412));
   });
 
   it("removes liquidity proportionally", () => {
@@ -325,5 +425,18 @@ describe("pool-80-20 shell", () => {
         "share-supply": Cl.uint(200000),
       }),
     );
+  });
+
+  it("rejects remove-liquidity for non-LP callers", () => {
+    initializePoolWithBuffer();
+
+    const result = simnet.callPublicFn(
+      "pool-80-20",
+      "remove-liquidity",
+      [Cl.uint(1)],
+      wallet1,
+    );
+
+    expect(result.result).toBeErr(Cl.uint(414));
   });
 });

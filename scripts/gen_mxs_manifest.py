@@ -7,7 +7,7 @@ TARGET = ROOT / "Clarinet.mxs.toml"
 
 
 REMOTE_BLOCK = 522000
-API_URL = "https://api.mainnet.hiro.so"
+API_URL = "https://api.hiro.so"
 
 
 def main() -> None:

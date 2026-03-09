@@ -26,9 +26,10 @@ We turned weighted BTCFi math into a bounded, provable, demo-ready Stacks primit
 
 - readonly quote exposes lower and upper
 - write path uses the lower bound
+- explicit math-domain checks guard reserve transitions
 - guard surfaces are explicit
 - reference model comparisons are automated
-- sBTC requirement and MXS are already wired
+- sBTC requirement and fixed-height MXS assertions are already wired
 
 ## Close
 
@@ -38,6 +39,6 @@ It wins by making correctness visible, bounded, and believable.
 
 ## Next Steps
 
-1. Turn placeholder proof status into completed proof artifacts
-2. Wire final live Judge Console reads
-3. Package the repo, demo, and README around one consistent claim table
+1. Harden hash-enforced bindings on write paths
+2. Reduce the remaining static-analysis warning surface where practical
+3. Package the repo, demo, README, and claim matrix into one final submission story

@@ -1,0 +1,331 @@
+{
+  "version": 1,
+  "generated_by": "scripts/gen_chaos_report.mjs",
+  "generated_at": "2026-03-09T06:19:29.771Z",
+  "summary": {
+    "pass": 9,
+    "fail": 0
+  },
+  "experiments": [
+    {
+      "experiment_id": "E-ART-01",
+      "layer": "L1-artifact",
+      "steady_state": "artifact bundle loads cleanly",
+      "fault": "claim-matrix.json missing",
+      "expected_behavior": "UI/data loader degrades, shows explicit error, and continues with claims=[]",
+      "actual_behavior": "degraded with explicit issue and claims=[]",
+      "pass_fail": "pass",
+      "residual_risk": "Front-end messaging style may still evolve; keep tests aligned with judge console UX.",
+      "details": {
+        "sourceLabel": "artifact bundle (degraded)",
+        "issues": [
+          {
+            "layer": "L1-artifact",
+            "path": "artifacts/claim-matrix.json",
+            "message": "simulated missing claim-matrix.json"
+          }
+        ]
+      }
+    },
+    {
+      "experiment_id": "E-LIVE-01",
+      "layer": "L2-live-readonly",
+      "steady_state": "live readonly works or cleanly degrades",
+      "fault": "live readonly HTTP 429 (simulated)",
+      "expected_behavior": "fallback to artifact bundle, source badge changes, and explicit issue is recorded",
+      "actual_behavior": "fallback succeeded with explicit issue",
+      "pass_fail": "pass",
+      "residual_risk": "Real network failures may have additional shapes; keep error classification strict but extensible.",
+      "details": {
+        "sourceLabel": "artifact bundle (fallback from live)",
+        "issues": [
+          {
+            "layer": "L2-live-readonly",
+            "message": "HTTP 429"
+          }
+        ]
+      }
+    },
+    {
+      "experiment_id": "E-MXS-01",
+      "layer": "L3-mxs-remote-data",
+      "steady_state": "MXS remote-data is configured and failure modes are classified as infra (not protocol)",
+      "fault": "remote_data endpoint unreachable (simulated)",
+      "expected_behavior": "chaos report records api_url + initial_height and classifies failure as infra/network",
+      "actual_behavior": "classified infra/network and recorded config",
+      "pass_fail": "pass",
+      "residual_risk": "This is classification evidence; live MXS replay evidence is tracked separately under tests/mxs.",
+      "details": {
+        "manifest": "Clarinet.mxs.toml",
+        "remote_data": {
+          "enabled": true,
+          "api_url": "https://api.hiro.so",
+          "initial_height": 522000,
+          "use_mainnet_wallets": true
+        },
+        "simulated_error": {
+          "failure_classification": "infra",
+          "kind": "network",
+          "message": "fetch failed: ECONNREFUSED",
+          "hint": "Likely network / DNS / endpoint reachability issue."
+        }
+      }
+    },
+    {
+      "experiment_id": "E-MXS-02",
+      "layer": "L3-mxs-remote-data",
+      "steady_state": "MXS remote-data failures are explainable",
+      "fault": "Hiro API rate limit (HTTP 429) (simulated)",
+      "expected_behavior": "classified infra/rate_limit with HIRO_API_KEY hint",
+      "actual_behavior": "classified infra/rate_limit",
+      "pass_fail": "pass",
+      "residual_risk": "Real-world 429 shapes vary; keep classification table updated as new error strings appear.",
+      "details": {
+        "simulated_error": {
+          "failure_classification": "infra",
+          "kind": "rate_limit",
+          "message": "HTTP 429 Too Many Requests",
+          "hint": "Likely Hiro API rate limiting; set HIRO_API_KEY or retry."
+        }
+      }
+    },
+    {
+      "experiment_id": "E-BND-01",
+      "layer": "L4-boundary-sequence",
+      "steady_state": "multi-step state transitions remain within explicit uint128 math-domain envelope",
+      "fault": "proportional LP add that exceeds the explicit math-domain envelope",
+      "expected_behavior": "ERR-MATH-DOMAIN and no partial state updates",
+      "actual_behavior": "reverted with ERR-MATH-DOMAIN and state unchanged",
+      "pass_fail": "pass",
+      "residual_risk": "This covers a fixed sequence; expand vectors if you want broader coverage near multiple edges.",
+      "details": {
+        "initial": {
+          "sbtc": "100000000",
+          "quote": "3000000"
+        },
+        "steps": [
+          {
+            "step": "initialize",
+            "result": {
+              "ok": true,
+              "value": {
+                "type": "bool",
+                "value": true
+              }
+            },
+            "snapshot": {
+              "reserves": {
+                "sbtc": "100000000",
+                "quote": "3000000"
+              },
+              "share_supply": "100000000",
+              "lp_balance": "100000000"
+            }
+          },
+          {
+            "step": "add-liquidity:small",
+            "result": {
+              "ok": true,
+              "value": {
+                "type": "(tuple (minted-shares uint) (reserve-quote uint) (reserve-sbtc uint) (share-supply uint))",
+                "value": {
+                  "minted-shares": {
+                    "type": "uint",
+                    "value": "1000000"
+                  },
+                  "reserve-quote": {
+                    "type": "uint",
+                    "value": "3030000"
+                  },
+                  "reserve-sbtc": {
+                    "type": "uint",
+                    "value": "101000000"
+                  },
+                  "share-supply": {
+                    "type": "uint",
+                    "value": "101000000"
+                  }
+                }
+              }
+            },
+            "snapshot": {
+              "reserves": {
+                "sbtc": "101000000",
+                "quote": "3030000"
+              },
+              "share_supply": "101000000",
+              "lp_balance": "101000000"
+            }
+          },
+          {
+            "step": "remove-liquidity:small",
+            "result": {
+              "ok": true,
+              "value": {
+                "type": "(tuple (amount-quote uint) (amount-sbtc uint) (reserve-quote uint) (reserve-sbtc uint) (share-supply uint))",
+                "value": {
+                  "amount-quote": {
+                    "type": "uint",
+                    "value": "30000"
+                  },
+                  "amount-sbtc": {
+                    "type": "uint",
+                    "value": "1000000"
+                  },
+                  "reserve-quote": {
+                    "type": "uint",
+                    "value": "3000000"
+                  },
+                  "reserve-sbtc": {
+                    "type": "uint",
+                    "value": "100000000"
+                  },
+                  "share-supply": {
+                    "type": "uint",
+                    "value": "100000000"
+                  }
+                }
+              }
+            },
+            "snapshot": {
+              "reserves": {
+                "sbtc": "100000000",
+                "quote": "3000000"
+              },
+              "share_supply": "100000000",
+              "lp_balance": "100000000"
+            }
+          },
+          {
+            "step": "add-liquidity:too-large",
+            "result": {
+              "ok": false,
+              "error_code": "412"
+            },
+            "snapshot_before": {
+              "reserves": {
+                "sbtc": "100000000",
+                "quote": "3000000"
+              },
+              "share_supply": "100000000",
+              "lp_balance": "100000000"
+            },
+            "snapshot_after": {
+              "reserves": {
+                "sbtc": "100000000",
+                "quote": "3000000"
+              },
+              "share_supply": "100000000",
+              "lp_balance": "100000000"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "experiment_id": "E-PIPE-01",
+      "layer": "L5-pipeline-drift",
+      "steady_state": "docs/claim-matrix.md and artifacts/claim-matrix.json stay aligned",
+      "fault": "claim matrix drift (docs vs artifacts)",
+      "expected_behavior": "drift is detected and fix commands are provided",
+      "actual_behavior": "claim IDs aligned",
+      "pass_fail": "pass",
+      "residual_risk": "Only checks claim IDs; expand to deeper field-level checks if needed.",
+      "details": {
+        "doc_ids": [
+          "CL-01",
+          "CL-02",
+          "CL-03",
+          "CL-04",
+          "CL-05",
+          "CL-06",
+          "CL-07"
+        ],
+        "artifact_ids": [
+          "CL-01",
+          "CL-02",
+          "CL-03",
+          "CL-04",
+          "CL-05",
+          "CL-06",
+          "CL-07"
+        ],
+        "fix_commands": [
+          "npm run gen:artifacts",
+          "npm run gen:console"
+        ]
+      }
+    },
+    {
+      "experiment_id": "E-PIPE-02",
+      "layer": "L5-pipeline-drift",
+      "steady_state": "demo manifest console panels match the judge console UI titles",
+      "fault": "panel list drift (manifest vs UI)",
+      "expected_behavior": "drift is detected and fix commands are provided",
+      "actual_behavior": "panel titles aligned",
+      "pass_fail": "pass",
+      "residual_risk": "String-match only; if titles become dynamic, migrate this check to a structured export.",
+      "details": {
+        "console_panels": [
+          "Overview",
+          "Swap Verifier",
+          "Witness Explorer",
+          "LP Verifier",
+          "Safety & Bindings",
+          "Chaos Summary",
+          "Proof Status"
+        ],
+        "missing_in_ui": [],
+        "fix_commands": [
+          "npm run gen:artifacts"
+        ]
+      }
+    },
+    {
+      "experiment_id": "E-PIPE-03",
+      "layer": "L5-pipeline-drift",
+      "steady_state": "judge-console-data.json matches the UI-required shape",
+      "fault": "console data drift (missing keys)",
+      "expected_behavior": "drift is detected and regen commands are provided",
+      "actual_behavior": "shape aligned",
+      "pass_fail": "pass",
+      "residual_risk": "Does not validate CV schema depth; add stricter checks if console becomes more complex.",
+      "details": {
+        "required_keys": [
+          "poolState",
+          "quote",
+          "witness",
+          "safety",
+          "binding",
+          "sbtcHash",
+          "quoteHash",
+          "lpBalance"
+        ],
+        "missing_keys": [],
+        "fix_commands": [
+          "npm run gen:console"
+        ]
+      }
+    },
+    {
+      "experiment_id": "E-PIPE-04",
+      "layer": "L5-pipeline-drift",
+      "steady_state": "proof-status artifact matches judge console expectations",
+      "fault": "proof status drift (missing P0/P1/P2 slots)",
+      "expected_behavior": "drift is detected and regen commands are provided",
+      "actual_behavior": "proof structure aligned",
+      "pass_fail": "pass",
+      "residual_risk": "This is a shallow structure check; theorem mapping drift should be tracked in proof artifacts and claim matrix.",
+      "details": {
+        "claim_ids": [
+          "P0",
+          "P1",
+          "P2"
+        ],
+        "fix_commands": [
+          "npm run gen:artifacts"
+        ]
+      }
+    }
+  ]
+}

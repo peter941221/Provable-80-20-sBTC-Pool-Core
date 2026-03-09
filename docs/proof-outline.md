@@ -43,11 +43,13 @@ Current code supports future proofs because it already exposes:
 - write paths consume the lower bound
 - witness values explain how output bounds were derived
 - differential tests compare on-chain quote results with a Python model
+- contract write paths now enforce an explicit `uint128` math domain for reserve transitions
 - Lean 4 workspace now builds successfully
 - initial P0 lemmas around arithmetic, root bounds, and lower/upper ordering are encoded in Lean
 - the current P0 checklist is mapped to theorem-level artifacts and marked complete for the current repo scope
 - current P1 reserve / LP structural claims are encoded in Lean and marked complete for the current repo scope
 - current P2 composition claims are encoded in Lean and marked complete for the current repo scope
+- the explicit math-domain guard now has a theorem slice in `proof/Pool820/MathDomain.lean`
 
 ## What Is Not Yet Proved
 
@@ -57,6 +59,6 @@ Current code supports future proofs because it already exposes:
 
 ## Next Steps
 
-1. Turn P0 claims into machine-checkable statements against current helper interfaces
-2. Add proof logs and proof artifact links to `artifacts/proof-status.json`
-3. Connect proof claims to Judge Console proof panel wording
+1. Keep theorem ids aligned with `artifacts/proof-status.json` and `artifacts/claim-matrix.json`
+2. Add proof artifact links or source-file references for each judge-facing claim
+3. Extend reserve-preservation statements only where they improve judge confidence

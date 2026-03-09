@@ -7,6 +7,7 @@ This project does not rely on one protection mechanism. It layers protections so
 ```text
 Safety
 ├─ Contract math and reserve invariants
+├─ Explicit uint128 math-domain checks
 ├─ Clarity 4 asset movement guards
 ├─ Client-side post conditions
 └─ Binding / inspection surfaces for judges and reviewers
@@ -17,8 +18,9 @@ Safety
 - explicit `min-out` checks on swap write paths
 - explicit minimum reserve checks after output calculations
 - explicit trade size limits through `max-trade-bps`
+- explicit `uint128` domain checks on reserve transitions and invariant math
 - conservative output policy: write paths use the lower bound, not an optimistic path
-- proportional LP only, so share accounting stays small and inspectable
+- proportional LP only, with explicit `lp-balances`, so only LPs can withdraw and share accounting stays small and inspectable
 
 ## Clarity 4 Guard Layer
 
@@ -34,9 +36,11 @@ Current guard coverage:
 - LP add inbound transfers
 - LP remove outbound transfers
 
-Current limitation:
+Current hash-binding coverage:
 
-- token binding is currently resolved through known supported token principals and readable binding status, not yet full hash-enforced production hardening
+- token principals are still restricted to the known supported set
+- all write paths (swap/add/remove, including pure outflow) require the current `contract-hash?` to match the hash captured at initialization
+- both inbound (`pull-*-in-bound`) and outbound (`push-*-out-bound`) asset movements assert hash-binding before transfer
 
 ## Client Layer
 
@@ -61,12 +65,11 @@ These help reviewers understand what the pool believes it is bound to.
 ## Residual Risk
 
 - static-analysis warnings remain in `clarinet check`
-- `contract-hash?` is exposed for inspection but not enforced in writes yet
 - the live frontend does not yet construct full production transaction payloads
-- proof claims are still artifact-level placeholders, not completed machine proofs
+- proof coverage is real and machine-checked in Lean, and now includes theorem slices for both the explicit math-domain guard and hash-binding equality claims used by write paths
 
 ## Next Steps
 
-1. Enforce optional contract-hash binding in write paths
-2. Reduce current `clarinet check` warnings by narrowing trusted surfaces
-3. Add scenario-level tests for guard failures and slippage failures
+1. Reduce current `clarinet check` warnings by narrowing trusted surfaces
+2. Keep the claim matrix, proof artifacts, and live readonly console wording aligned
+3. Extend theorem coverage only where it improves confidence more than packaging effort

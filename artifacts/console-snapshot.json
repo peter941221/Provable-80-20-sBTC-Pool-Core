@@ -13,6 +13,7 @@
   "safety": {
     "post_condition_mode": "Deny",
     "guard_enabled": true,
+    "math_domain_guard_enabled": true,
     "binding_status": "mock-sbtc + mock-quote"
   }
 }

@@ -1,0 +1,586 @@
+# 最终强化方案
+
+日期：2026-03-09
+项目：Provable 80/20 sBTC Pool Core
+目标：把“第一名级路线”升级成“第一名级交付（评委几乎挑不出硬伤）”
+当前阶段：`week2-live-readonly-evidence-pack`
+目标阶段：`week3-final-submission-pack`
+
+==================================================
+0. 一句话结论（你现在最该做的事）
+==================================================
+
+你现在已经具备第一名的“打法”，但要把第一名变成“几乎必然”，必须先补两个会被一眼卡住的硬洞：
+
+1) 🚨 LP 份额账缺失（`lp-balances`）——`remove-liquidity` 目前无法证明“只有 LP 能取出资金”
+2) 🚨 Hash-binding 覆盖不完整——当前主要在入金路径校验，出金/纯出金路径需要强制绑定校验
+
+补完这两个后，再把证据链压实成：每个 claim 都能 1 次点击定位到
+
+```text
+Claim
+├─ Contract function
+├─ Unit / Differential / MXS test
+├─ Proof theorem（若适用）
+├─ Artifact（claim-matrix / proof-status / vectors）
+└─ Judge Console panel（可视化消费）
+```
+
+==================================================
+1. 本次“深度研究”范围（2026-03-09）
+==================================================
+
+1.1 仓库内部真源（以这些文件为准）
+
+- 计划真源：`tech_plan.md`
+- 合约真源：`contracts/pool-80-20.clar`
+- 参考模型：`sim/reference_model.py`
+- 测试：`tests/unit/*`, `tests/differential/*`, `tests/mxs/*`
+- Proof：`proof/`（Lean 4）
+- 证据产物：`artifacts/*`
+- Demo UI：`frontend/judge-console/*`
+- 安全叙事：`docs/security-model.md` + `docs/claim-matrix.md`
+
+1.2 本机验证（已通过，用于支撑“可运行”叙事）
+
+- `python scripts/check_manifest.py` ✅
+- `clarinet check -d` ✅
+- `vitest run tests/unit` ✅
+- `vitest run tests/differential` ✅
+- `npm run mxs:check` ✅
+- `npm run test:mxs` ✅
+- `cd proof && lake build` ✅
+
+1.3 官方最新文档复核（2026-03-09 抽样核对）
+
+说明：下面这些点不是“背景知识”，而是会直接影响你代码写法、叙事可信度、以及评委是否信你。
+
+- Clarity function reference（`restrict-assets?` / `as-contract?` / `contract-hash?` / `sqrti`）
+  - https://docs.stacks.co/reference/functions
+- Clarinet 的 Mainnet Execution Simulation（MXS）
+  - https://docs.hiro.so/clarinet/guides/mainnet-execution-simulation
+- Clarinet 集成 sBTC（requirements + 本地环境）
+  - https://docs.hiro.so/clarinet/guides/sbtc-integration
+
+1.4 数学算法再研究（目标：更“准”的可证明实现，不是更“通用”的 AMM）
+
+本次重点复核的算法面：
+
+- 不变量化约：`x^(4/5) * y^(1/5) = k`  ↦  `x^4 * y = K`
+- 保守报价：用 `ceil` / `floor` 做上下界，write path 固定用 lower
+- `pow4` / `ceil-div` / `saturating-sub` / `root4`（uint128 上）
+- 溢出域：把“最大安全域”变成合约显式断言 + 证据面可见常量
+- 替代算法候选：bit-by-bit root4 vs `sqrti` 两次 vs Newton iteration
+
+==================================================
+2. 最新官方文档：会影响实现的关键语义（要写进提交物）
+==================================================
+
+2.1 `restrict-assets?`
+
+目标：把某段表达式包进“允许的资产出流集合”，并在执行结束后校验出流不超过 allowance。
+
+官方 signature（简写）：
+
+- `(restrict-assets? <principal> (<asset-id> <amount>) <expr>) -> (response A int)`
+
+关键语义（按评审需要翻译）：
+
+- allowance 是“最大允许出流上限”，不是“保证一定发生转账”
+- 校验发生在 `<expr>` 执行结束后；超出上限会导致整段回滚
+- 第一名版本建议：allowance 一律写成“精确等于本次允许的金额”（避免误放大 blast radius）
+
+建议你在提交物里用一句话解释它的价值（评委能听懂）：
+
+```text
+它不是“保证转账成功”，而是“保证这段代码最多只能转出这些资产/金额”。
+```
+
+2.2 `as-contract?`
+
+目标：让合约在“合约自身身份”下执行表达式，允许合约作为资产发送方执行 `transfer` 等出流。
+
+官方 signature（简写）：
+
+- `(as-contract? (<asset-id> <amount>) <expr>) -> (response A int)`
+
+关键语义（按评审需要翻译）：
+
+- `<expr>` 在“合约身份”下执行，从而允许合约作为资产发送方
+- allowance 仍然是“最大允许出流上限”，建议同样精确写死金额
+
+你当前用法（先 `self-principal`，再做出金 `as-contract? ((with-ft ...) ...)`）是正确方向，但需要：
+
+- 把 hash-binding 校验扩大到所有“出金发生前”必经路径
+- 让 `remove-liquidity` 这种纯出金路径也有一致的 guard + binding 叙事
+
+2.3 `contract-hash?`
+
+官方定义：返回合约的（可选）代码哈希（`(optional (buff 32))`），可用于“代码身份绑定”。
+
+官方 signature（简写）：
+
+- `(contract-hash? <contract-principal>) -> (optional (buff 32))`
+
+对你这个项目，它的 judge-facing 价值是：
+
+```text
+我不是只绑定“某个 principal”，我还绑定“这个 principal 下的具体代码版本”。
+```
+
+2.4 `sqrti`
+
+官方提供了内建整数平方根 `sqrti`（floor），这会影响你对 `root4` 的策略选择：
+
+- 官方 signature（简写）：`(sqrti <n>)`
+
+- `root4(n) = sqrti(sqrti(n))` 在语义上非常干净
+- 但 proof-side 需要你对 `sqrti` 的性质做“明确假设/引用语言规范”，否则会被质疑 proof 的落点
+
+结论：见第 3.4 的“root4 算法决策”。
+
+2.5 Clarinet MXS（Mainnet Execution Simulation）
+
+核心价值（评委视角）：
+
+```text
+不是“我在本地跑通了”，而是“我在固定主网高度下重放真实链状态也跑通了”。
+```
+
+推荐配置骨架（写进 `Clarinet.mxs.toml`，固定高度可回放）：
+
+```toml
+[repl.remote_data]
+enabled = true
+api_url = "https://api.hiro.so"
+initial_height = 522000
+use_mainnet_wallets = true
+```
+
+你当前的配置是正确路线（`Clarinet.mxs.toml` + `tests/mxs/*`），强化建议见第 6.5。
+
+2.6 Clarinet 集成 sBTC（requirements）
+
+官方推荐的最小接入方式是把 sBTC deposit 合约作为 requirement 引入（Clarinet 会自动拉取到 `.cache/requirements/`）：
+
+```toml
+[[project.requirements]]
+contract_id = "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit"
+```
+
+对你的“第一名版本”来说，这条线的正确用法是：
+
+- 把它当成“主网真实感依赖”（MXS/requirements），而不是把你的协议 scope 扩成“完整 sBTC bridge”
+- 在提交物里把它解释成：我们对接官方合约、并能在固定高度下重放验证（可复现）
+
+==================================================
+3. 数学算法深度复核（更“准”而非更“大”）
+==================================================
+
+3.1 不变量化约仍然是你最大的技术护城河
+
+```text
+80/20 weighted
+x^(4/5) * y^(1/5) = k
+
+化约（两边取 5 次方）
+x^4 * y = K
+```
+
+这个化约直接带来三条“第一名杠杆”：
+
+1) 可在 Clarity 上用整数实现，不需要 ln/exp/pow
+2) `sBTC -> quote` 只有四次方；`quote -> sBTC` 只有四次根
+3) 容易构造 witness：`lower <= ideal <= upper`（评委可消费）
+
+3.2 保守舍入策略（你现在的方向是对的）
+
+核心原则：write path 用 lower bound，永不超付（overpay）。
+
+`sbtc-in`（示意）
+
+```text
+dx_eff = fee_down(dx)
+K = x^4 * y
+y_after_upper = ceil(K / (x + dx_eff)^4)
+out_lower = y - y_after_upper
+```
+
+`quote-in`（示意）
+
+```text
+dy_eff = fee_down(dy)
+K = x^4 * y
+x_keep_input_upper = ceil(K / (y + dy_eff))
+x_keep_upper = ceil_root4(x_keep_input_upper)
+out_lower = x - x_keep_upper
+```
+
+3.3 `ceil-div` / `saturating-sub` 的算法边界（要写进证据链）
+
+- `ceil-div` 的整数公式：`ceil(n/d) = (n + d - 1) / d`（n>0）
+- `saturating-sub`：防止 underflow，保证 `out >= 0`
+
+你的实现已经把关键点落成“定步数 + 显式安全壳”。建议补齐两件事：
+
+1) 用脚本生成/校验这些关键算子的“证明输入常量”（避免手写漂移）
+2) 在 claim matrix 里把“哪些边界由测试 cover，哪些由 proof cover”说清楚
+
+3.4 `root4` 算法：再研究后的候选与推荐
+
+为什么它值得专门讨论：
+
+- 当前最高 runtime 消耗集中在 `quote-quote-in` / `swap-quote-in`（来自 `root4` 路径）
+- `costs-reports.json` 的高位样本（simnet 统计）：
+  - `swap-quote-in` runtime ~ 268k
+  - `quote-quote-in` runtime ~ 235k
+
+当前实现（A）的核心思路（写给评委/审查者看的“算法解释”）：
+
+```text
+acc = 0
+for k from 31 downto 0:
+  cand = acc + 2^k
+  if cand^4 <= value: acc = cand
+return acc  # floor root4
+
+ceil_root4(value) = acc if acc^4 == value else acc + 1
+```
+
+你在合约里把这段逻辑“完全展开成 32 轮无循环代码”，直接带来三件事：
+
+1) 成本上界固定（评委喜欢“bounded”）
+2) proof 更好做（没有循环不变式，只是 step-by-step lemma）
+3) 安全壳更清晰：`cand <= 2^32-1` ⇒ `cand^4` 不会溢出 uint128
+
+补充说明：仓库的 `isqrt64-generated` 用的是 restoring integer sqrt（固定 32 轮）来覆盖 uint64。
+但 `quote-in` 路径的 `root4` 输入来自 `uint128`（`K / (y + dy_eff)`），因此需要专门的 `root4-128` helper。
+
+候选算法对比（重点是“可证明 + 可控成本”）：
+
+```text
+A) bit-by-bit（当前：32 轮、无循环、pow4 比较）
+├─ 优点：固定步数；可完全自证；实现不依赖 VM 内建数学
+├─ 缺点：成本偏高（每轮 pow4 带乘法）；代码体积大
+└─ 适合：proof-first、评委看重“我能把算法摊开”
+
+B) sqrti 两次（root4(n)=sqrti(sqrti(n))）
+├─ 优点：代码极短；可能显著降成本；语义非常清楚
+├─ 缺点：proof 要依赖语言规范/内建函数性质；评委若较严会追问“你证明的是啥？”
+└─ 适合：更工程化、更接近生产；但要管理 proof 叙事边界
+
+C) Newton iteration（整数牛顿）
+├─ 优点：迭代次数少（log 收敛）
+├─ 缺点：需要循环/递归（Clarity 不友好）；证明复杂；边界条件多
+└─ 结论：不适合 hackathon 的第一名版本
+```
+
+推荐决策（第一名导向）：
+
+- V0 提交物保持 A（你现在这条线）不动：它最贴合“bounded + inspectable + provable”
+- 同时开一个 P2 级别的备选 TODO：实现 B 并做 costs 对比（只在“明显降本且叙事不伤”的前提下切换）
+
+3.5 `uint128` 数学域上界：必须继续把“隐含正确性”变成“显式可见事实”
+
+关键常量（建议写进 Judge Console + artifacts）：
+
+- `MAX_UINT128 = 2^128 - 1`
+- 为保证 `pow4(x)` 不溢出：`x <= 2^32 - 1`
+  - `MAX_SAFE_POW4_INPUT = 4294967295`
+
+在你当前最小储备常量下：
+
+- `MIN_QUOTE_RESERVE = 1_000_000`
+- `MAX_SAFE_SBTC_AT_MIN_QUOTE = floor((MAX_UINT128 / MIN_QUOTE_RESERVE)^(1/4)) = 135,818,791`
+- `MIN_SBTC_RESERVE = 100,000`
+- `MAX_SAFE_QUOTE_AT_MIN_SBTC = floor(MAX_UINT128 / (MIN_SBTC_RESERVE^4)) = 3,402,823,669,209,384,634`
+
+这组常量必须做到：
+
+1) 合约里强制执行（你已做）
+2) artifacts 里固定产出（你已做一部分）
+3) Judge Console 里可见（你已做一部分）
+4) proof 里把“域检查 ⇒ 不溢出”变成可消费 slice（你已开始做）
+
+3.6 LP（shares）数学：目前与你的 claim/叙事不一致（必须修）
+
+计划与 claim 的目标是“份额账闭合”，但合约当前只有 `share-supply`，缺失：
+
+- `lp-balances : map principal -> uint`
+- “谁有多少 shares” 这条不可替代的安全事实
+
+这不是“增强”，这是“让 LP 变得真实可用且不致命”。
+
+==================================================
+4. 第一名差距清单（按风险排序）
+==================================================
+
+4.1 P0（Blocker：不做会直接掉档）
+
+- P0-01：补齐 LP 份额账（lp-balances），修正 add/remove 的权限与账闭合
+- P0-02：hash-binding 覆盖所有写路径（含 push-out + remove-liquidity）
+- P0-03：Claim wording 与事实对齐（避免“proof-washing”观感）
+
+4.2 P1（高杠杆加分：5 分钟更难挑刺）
+
+- P1-01：补齐 `quote-add-shares` / `quote-remove-shares`（与 write path 对齐），扩展 vector-pack 与 console 展示
+- P1-02：补一个“真实 sBTC（requirement）初始化/只读证据”的最小闭环（让 BTCFi 叙事更硬）
+- P1-03：把 `混沌工程.TXT` 的 L1/L2 做成可回放的自动化“证据工程”测试
+
+4.3 P2（Nice-to-have：只在不伤主线时做）
+
+- P2-01：`root4` 用 `sqrti` 两次的替代实现 + costs 对比（不切换也能作为研究亮点）
+- P2-02：更强的 proof：从“slice 包装”推进到“更贴近合约 helper 名称/结构”的等价性证明（只做最关键链路）
+
+==================================================
+5. 最终强化路线图（按交付节奏）
+==================================================
+
+说明：这是“赢”的节奏，不是“完美”的节奏。
+
+```text
+Day 1：修硬洞（P0）
+├─ LP 份额账
+├─ hash-binding 全覆盖
+└─ claim / docs 同步对齐
+
+Day 2：加分项（P1）
+├─ LP quote surfaces + vectors + console
+├─ sbtc requirement 最小闭环演示
+└─ chaos evidence tests
+
+Day 3：提交物封装（Packaging）
+├─ README / pitch / demo-script 三者对齐
+├─ 录屏脚本 + 一键复现命令
+└─ “证据链”页面（claim matrix + proof status + console）
+```
+
+==================================================
+6. 详细 TODO（可直接开工；每条都有 DoD）
+==================================================
+
+格式约定：
+
+- 优先级：P0 / P1 / P2
+- DoD：Definition of Done（可执行验收）
+- 验证：建议跑的命令（不要求全都跑，但要能跑）
+
+----------------------------------------------
+6.1 合约（Clarity）TODO
+----------------------------------------------
+
+[P0-C01] 增加 `lp-balances` 并修复 remove-liquidity 权限
+
+- Why：当前 `remove-liquidity` 只校验 `share-amount <= share-supply`，无法阻止非 LP 提现
+- Files：
+  - `contracts/pool-80-20.clar`
+  - `tests/unit/pool-80-20.test.ts`
+  - `docs/claim-matrix.md`（CL-03 wording）
+- DoD：
+  - add-liquidity：minted shares 记入 `lp-balances[tx-sender]`
+  - remove-liquidity：校验并扣减 `lp-balances[tx-sender]`
+  - 初始化：把初始 shares 记入 `lp-balances[tx-sender]`（或明确“初始 shares=0，必须 add-liquidity 才能铸造”，二选一，推荐前者）
+  - 新增只读：`get-lp-balance(owner)`（便于 console 展示与测试）
+  - 新增测试：非 LP 调用 remove-liquidity 必须失败
+- 验证：
+  - `npm run test:unit`
+  - `clarinet check -d`
+
+[P0-C02] hash-binding：覆盖所有写路径（pull + push + 纯出金）
+
+- Why：现在主要在 pull-in 校验；remove-liquidity 是纯出金路径
+- Files：
+  - `contracts/pool-80-20.clar`
+  - `tests/unit/pool-80-20.test.ts`
+  - `docs/security-model.md`
+- DoD：
+  - swap-sbtc-in / swap-quote-in：在 state 更新前，强制两种 token 的 hash-binding 都满足
+  - add-liquidity / remove-liquidity：同样强制两种 token hash-binding
+  - push-out helper 内部也加一次 assert（防止未来出现新路径绕过）
+  - security-model：明确说明“哪些路径强制 hash-binding”
+- 验证：
+  - `npm run test:unit`
+  - `npm run validate:week1`
+
+[P0-C03] 统一错误码与“外部调用失败”叙事
+
+- Why：评委更喜欢“明确失败类型”，而不是 `ERR-GUARD` 一把梭
+- Files：
+  - `contracts/pool-80-20.clar`
+  - `docs/security-model.md`
+- DoD：
+  - 把 transfer 失败、guard allowance 失败、hash-binding 失败等路径映射到更具体的 error（保持现有码也可以，但要在 docs 解释）
+  - 在 console 的 Safety panel 里显示“失败分类提示”
+
+----------------------------------------------
+6.2 数学/算法（合约侧）TODO
+----------------------------------------------
+
+[P1-M01] 把“数学域常量推导”变成可再生 artifact
+
+- Why：避免常量手写漂移；让评委相信“这是算出来的，不是拍脑袋”
+- Files：
+  - `scripts/`（新增一个 `gen_math_domain.py` 或在 `gen_artifacts.py` 扩展）
+  - `artifacts/console-snapshot.json` / `artifacts/judge-console-data.json`
+  - `frontend/judge-console/app.js`
+- DoD：
+  - artifacts 里输出：MAX_UINT128 / MAX_SAFE_POW4_INPUT / MAX_SAFE_SBTC_AT_MIN_QUOTE / MAX_SAFE_QUOTE_AT_MIN_SBTC 的计算过程或至少来源字段
+  - console 展示：显示这些常量，并解释“为什么这就是安全壳”
+
+[P2-M01] 备选 root4：`sqrti` 两次实现 + costs 对比
+
+- Why：`quote-quote-in` 路径成本最高；如果能显著降成本且不伤叙事，是很好的 bonus
+- Files：
+  - `contracts/pool-80-20.clar`（分支实现或单独 helper）
+  - `tests/unit/*`（加一致性断言）
+  - `costs-reports.json`（重新生成对比）
+- DoD：
+  - 新实现与旧实现：在域内对同一输入输出一致（floor/ceil 语义一致）
+  - 对比至少 3 个关键用例：quote-quote-in、swap-quote-in、debug-quote-in 的 runtime
+  - 若不切换：在 `docs/proof-outline.md` 写明“我们评估过替代实现”
+
+----------------------------------------------
+6.3 测试 TODO（把“可信”变成可回放事实）
+----------------------------------------------
+
+[P0-T01] 添加 LP 权限回归测试（防止资金被误提）
+
+- DoD：
+  - wallet_1 未 add-liquidity 时 remove-liquidity 必须失败
+  - add-liquidity 后 wallet_1 remove-liquidity 成功且余额变化正确
+
+[P1-T01] 增加边界状态序列测试（接近数学域边界）
+
+- Why：这是最像“真实金融合约风险”的证据
+- DoD：
+  - 生成一组“接近 MAX_SAFE_*”的状态序列（swap/add/remove 组合）
+  - 每一步都断言：min reserves + math-domain guard + no overflow
+  - 失败要有明确 error code（不是 silent 0）
+
+[P1-T02] 混沌工程 L1/L2 最小落地（artifact / live readonly）
+
+- 目标：证明“证据系统不会撒谎”
+- DoD：
+  - L1：缺失/损坏 `claim-matrix.json` 时 console 明确报错并降级
+  - L2：live readonly API 超时/429 时 console 明确提示并 fallback 到 artifacts
+  - 产物：把 pass/fail 结果写成 artifact（比如 `artifacts/chaos-report.json`）
+
+----------------------------------------------
+6.4 Proof TODO（只做“高杠杆”的形式化）
+----------------------------------------------
+
+[P0-P01] 修正 CL-03 的 proof 叙事边界（在 LP 份额账修复后同步）
+
+- Why：当前 proof 更像 slice 包装，评委可能会问“这和合约状态有什么关系？”
+- DoD：
+  - proof-outline：明确“证明的对象是什么（spec level）”与“与合约实现的连接点”
+  - claim-matrix：CL-03 指向的 theorem 与合约状态一致（lp-balances 引入后尤甚）
+
+[P1-P01] 增加“域检查 ⇒ 不溢出”的可消费 lemma（贴近合约 helper）
+
+- DoD：
+  - 把 `assert-safe-reserves` 的关键不变量在 Lean 里用更贴近合约字段名包装一层
+  - 在 claim matrix 里把它标成“proof-backed safety envelope”
+
+----------------------------------------------
+6.5 MXS / 主网真实感 TODO
+----------------------------------------------
+
+[P1-X01] 扩展 MXS 测试：把“远端依赖失败”也变成可解释证据
+
+- Why：评委会把 remote-data failure 当成“你项目不稳定”
+- DoD：
+  - README 增加一段“如果 MXS 失败，如何区分 infra vs contract”
+  - 测试或脚本里加入：HIRO_API_KEY 缺失时的提示（不要让失败像协议 bug）
+
+[P1-X02] 增加一个“sBTC requirement + pool initialize 的最小闭环”
+
+- DoD：
+  - 增加一个测试：用 requirement 提供的 `sbtc-token` 初始化 pool（若因为 Clarity 版本/trait 不兼容，则改成 readonly 证据并在 docs 解释）
+  - console 里显示：当前绑定的是 mock 还是 official sbtc
+
+----------------------------------------------
+6.6 Artifacts / Judge Console TODO（把证据做成“可消费”）
+----------------------------------------------
+
+[P0-A01] claim matrix 与真实实现对齐（补 P0 修复后立即做）
+
+- DoD：
+  - CL-03 改成“带 lp-balances 的份额账闭合”或明确当前 scope
+  - 每条 claim 都有：contract fn / test 文件 / theorem（若无就写 none）
+
+[P1-A01] vector-pack 扩展到 LP 与两方向 swap（用来做 5 分钟 demo）
+
+- DoD：
+  - 增加至少 1 个 add-liquidity 向量
+  - 增加至少 1 个 remove-liquidity 向量
+  - console 可以一键切换向量并显示 witness/结果
+
+[P1-U01] console 增加“来源可信度条”（artifact / live readonly / mxs）
+
+- DoD：
+  - Panel 顶部显示：source=artifact bundle / live readonly / mxs replay
+  - 对每个 source 给一句“可信度解释”
+
+----------------------------------------------
+6.7 README / Pitch / Demo TODO（最终提交物包装）
+----------------------------------------------
+
+[P0-D01] README 的“可运行承诺”与命令对齐
+
+- DoD：
+  - README 里给出 1 条“最短复现命令”：`npm run validate:full`
+  - 给出 1 条“最短打开 console 命令/步骤”（HTTP server + 打开 index.html）
+
+[P1-D01] Demo Script 升级为“逐句台词 + 屏幕动作”
+
+- DoD：
+  - 5 分钟版脚本包含：每一步点哪里、说什么、展示什么证据
+  - 明确 2 个“评委可能追问”的 FAQ：LP shares、hash-binding
+
+[P1-D02] 增加 6 张 panel 截图或 gif（评委在 GitHub 首页就能看懂）
+
+----------------------------------------------
+6.8 交付保险 TODO（避免最后一天翻车）
+----------------------------------------------
+
+[P0-S01] 锁定一个“不会漂移”的提交物快照
+
+- DoD：
+  - `artifacts/` 全部可生成、可校验（`python scripts/check_manifest.py`）
+  - 在 README 标出 “submission commit hash”（或至少日期 + tag）
+
+[P1-S01] 增加一条 CI（哪怕是最小的）保证 `validate:full` 不退化
+
+- DoD：
+  - GitHub Actions（或本地脚本）跑 `npm run validate:full`
+
+==================================================
+7. 最终验收清单（提交前必须全部绿）
+==================================================
+
+最小提交前验收（建议你把它当成“最后一键”）：
+
+- `npm run validate:full`
+
+提交物自检（不写代码也能做）：
+
+- 打开 `frontend/judge-console/index.html`，确认 6 个 panel 正常渲染
+- claim matrix 每条都能点到对应文件
+- README 的“30 秒/90 秒/5 分钟”叙事前后一致
+
+==================================================
+8. 如果时间不够：最小可赢版本（First-place MVP）
+==================================================
+
+必须做（否则会掉档）：
+
+- P0-C01 LP 份额账（安全硬洞）
+- P0-C02 hash-binding 全覆盖（叙事硬洞）
+- P0-A01 claim wording 对齐（可信度硬洞）
+
+可以砍（不影响第一名主轴）：
+
+- P2 root4 替代实现
+- 更广的 proof（除非你已经顺手能贴到合约 helper）
+- 更复杂的路由/多池/任意权重（明确不做）

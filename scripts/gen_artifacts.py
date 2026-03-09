@@ -13,6 +13,88 @@ def write_json(path: Path, payload: dict) -> None:
 def main() -> None:
     ARTIFACTS.mkdir(exist_ok=True)
 
+    claim_matrix = [
+        {
+            "id": "CL-01",
+            "claim": "sbtc-in readonly quote keeps lower <= upper and write path uses the lower bound",
+            "contract": ["quote-sbtc-in", "debug-sbtc-in", "swap-sbtc-in"],
+            "proof": ["sbtcIn_lower_le_upper", "swapWriteOutput_eq_lower", "swapWriteOutput_le_upper"],
+            "tests": ["tests/unit/pool-80-20.test.ts", "tests/differential/reference-model.test.ts"],
+            "artifacts": ["artifacts/vector-pack.json", "artifacts/judge-console-data.json"],
+            "panel": "Swap Verifier",
+            "status": "proved-and-tested",
+        },
+        {
+            "id": "CL-02",
+            "claim": "quote-in readonly quote keeps lower <= upper and the witness stays inspectable",
+            "contract": ["quote-quote-in", "debug-quote-in", "swap-quote-in"],
+            "proof": ["quoteIn_lower_le_upper", "floorRoot4_input_le_ceilRoot4_input"],
+            "tests": ["tests/unit/pool-80-20.test.ts", "tests/differential/reference-model.test.ts"],
+            "artifacts": ["artifacts/vector-pack.json", "artifacts/judge-console-data.json"],
+            "panel": "Witness Explorer",
+            "status": "proved-and-tested",
+        },
+        {
+            "id": "CL-03",
+            "claim": "LP add/remove stays proportional, withdrawals require LP share ownership, and share accounting remains closed over share-supply + lp-balances",
+            "contract": ["add-liquidity", "remove-liquidity", "get-lp-balance"],
+            "proof": ["addLiquidity_share_closed", "removeLiquidity_share_closed", "addLiquidity_reserves_increase", "removeLiquidity_reserves_decrease", "add_remove_roundtrip_exact"],
+            "tests": ["tests/unit/pool-80-20.test.ts", "tests/differential/reference-model.test.ts"],
+            "artifacts": ["artifacts/judge-console-data.json"],
+            "panel": "LP Verifier",
+            "status": "proved-and-tested",
+        },
+        {
+            "id": "CL-04",
+            "claim": "Clarity 4 guards, hash-enforced binding (including pure outflow paths), and post-condition expectations are explicit and reviewable",
+            "contract": [
+                "get-safety-envelope",
+                "get-binding-status",
+                "get-sbtc-contract-hash",
+                "get-quote-contract-hash",
+                "swap-sbtc-in",
+                "swap-quote-in",
+                "add-liquidity",
+                "remove-liquidity",
+            ],
+            "proof": ["hashBinding_accepts_matching", "hashBinding_rejects_mismatch", "pairHashBinding_accepts_matching", "pairHashBinding_implies_component_equalities", "initCapturesHashBinding"],
+            "tests": ["tests/unit/pool-80-20.test.ts"],
+            "artifacts": ["artifacts/console-snapshot.json", "artifacts/judge-console-data.json"],
+            "panel": "Safety & Bindings",
+            "status": "proved-tested-and-visible",
+        },
+        {
+            "id": "CL-05",
+            "claim": "The reference Python model matches the on-chain readonly quote path for the sampled differential suite",
+            "contract": ["quote-sbtc-in", "quote-quote-in", "add-liquidity", "remove-liquidity"],
+            "proof": [],
+            "tests": ["tests/differential/reference-model.test.ts"],
+            "artifacts": ["artifacts/vector-pack.json"],
+            "panel": "Overview",
+            "status": "tested",
+        },
+        {
+            "id": "CL-06",
+            "claim": "Official sBTC requirement wiring and fixed-height MXS scenarios are both reproducible",
+            "contract": ["SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token", "SP000000000000000000002Q6VF78.pox-4"],
+            "proof": [],
+            "tests": ["tests/unit/sbtc-requirement.test.ts", "tests/mxs/mainnet-realism.test.ts"],
+            "artifacts": ["Clarinet.mxs.toml"],
+            "panel": "Overview",
+            "status": "tested",
+        },
+        {
+            "id": "CL-07",
+            "claim": "Write paths enforce an explicit uint128 math domain for reserve transitions and invariant math",
+            "contract": ["initialize", "swap-sbtc-in", "swap-quote-in", "add-liquidity", "remove-liquidity", "get-safety-envelope"],
+            "proof": ["safeReserves_pow4_input_le_bound", "safeReserves_invariant_le_max", "swapSbtcIn_nextState_safe_of_checks", "swapQuoteIn_nextState_safe_of_checks", "addLiquidity_nextState_safe_of_checks", "removeLiquidity_nextState_safe_of_checks"],
+            "tests": ["tests/unit/pool-80-20.test.ts"],
+            "artifacts": ["artifacts/console-snapshot.json", "artifacts/judge-console-data.json"],
+            "panel": "Safety & Bindings",
+            "status": "proved-and-tested",
+        },
+    ]
+
     write_json(
         ARTIFACTS / "proof-status.json",
         {
@@ -87,7 +169,9 @@ def main() -> None:
                     "items": [
                         {"id": "P1-R1", "status": "proved", "theorems": ["legalSwapSbtcIn_preserves_min", "legalSwapQuoteIn_preserves_min"]},
                         {"id": "P1-L1", "status": "proved", "theorems": ["addLiquidity_share_closed", "removeLiquidity_share_closed"]},
-                        {"id": "P1-L2", "status": "proved", "theorems": ["addLiquidity_reserves_increase", "removeLiquidity_reserves_decrease"]}
+                        {"id": "P1-L2", "status": "proved", "theorems": ["addLiquidity_reserves_increase", "removeLiquidity_reserves_decrease"]},
+                        {"id": "P1-D1", "status": "proved", "theorems": ["safeReserves_pow4_input_le_bound", "safeReserves_invariant_le_max", "swapSbtcIn_nextState_safe_of_checks", "swapQuoteIn_nextState_safe_of_checks", "addLiquidity_nextState_safe_of_checks", "removeLiquidity_nextState_safe_of_checks"]},
+                        {"id": "P1-H1", "status": "proved", "theorems": ["hashBinding_accepts_matching", "hashBinding_rejects_mismatch", "pairHashBinding_accepts_matching", "pairHashBinding_implies_component_equalities", "initCapturesHashBinding"]}
                     ]
                 },
                 {
@@ -111,10 +195,20 @@ def main() -> None:
                 "Witness Explorer",
                 "LP Verifier",
                 "Safety & Bindings",
+                "Chaos Summary",
                 "Proof Status",
             ],
-            "status": "week2-live-data",
+            "status": "week2-live-readonly-evidence-pack",
             "entry": "frontend/judge-console/index.html",
+        },
+    )
+
+    write_json(
+        ARTIFACTS / "claim-matrix.json",
+        {
+            "version": 1,
+            "generated_by": "scripts/gen_artifacts.py",
+            "claims": claim_matrix,
         },
     )
 
@@ -159,6 +253,7 @@ def main() -> None:
             "safety": {
                 "post_condition_mode": "Deny",
                 "guard_enabled": True,
+                "math_domain_guard_enabled": True,
                 "binding_status": "mock-sbtc + mock-quote",
             },
         },

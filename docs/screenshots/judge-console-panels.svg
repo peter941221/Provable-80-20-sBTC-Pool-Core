@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-label="Judge Console panel preview">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="0%" r="100%">
+      <stop offset="0%" stop-color="#132041" />
+      <stop offset="100%" stop-color="#0b1020" />
+    </radialGradient>
+    <style>
+      .title { font: 700 40px Inter, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #edf2ff; }
+      .subtitle { font: 500 16px Inter, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #a9b4d0; }
+      .badgeText { font: 600 14px Inter, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #76d7ea; }
+      .panel { fill: #141c33; stroke: #273250; stroke-width: 2; }
+      .panelTitle { font: 700 18px Inter, system-ui, -apple-system, "Segoe UI", sans-serif; fill: #edf2ff; }
+      .panelBody { font: 500 14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; fill: #a9b4d0; }
+      .muted { fill: #a9b4d0; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="760" fill="url(#bg)" />
+
+  <text x="40" y="68" class="title">Judge Console</text>
+  <text x="40" y="98" class="subtitle">Panel preview (generated) — open <tspan class="panelBody">frontend/judge-console/index.html</tspan> for the live console.</text>
+
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="260" height="34" rx="17" class="panel" />
+    <text x="14" y="23" class="badgeText">Source: artifact bundle (fallback from live)</text>
+  </g>
+
+  <!-- layout constants: x=40, col=360, gap=20, w=360, h=190 -->
+  <!-- Row 1 -->
+  <g transform="translate(40, 170)">
+    <rect x="0" y="0" width="360" height="190" rx="16" class="panel" />
+    <text x="18" y="34" class="panelTitle">Overview</text>
+    <text x="18" y="66" class="panelBody">invariant = x^4 * y = K</text>
+    <text x="18" y="88" class="panelBody">weights  = 80/20</text>
+    <text x="18" y="110" class="panelBody">reserves  = { sbtc: 200000, quote: 2000000 }</text>
+    <text x="18" y="132" class="panelBody">claims    = 7</text>
+    <text x="18" y="154" class="panelBody">demo      = bounded, inspectable, replayable</text>
+  </g>
+
+  <g transform="translate(420, 170)">
+    <rect x="0" y="0" width="360" height="190" rx="16" class="panel" />
+    <text x="18" y="34" class="panelTitle">Swap Verifier</text>
+    <text x="18" y="66" class="panelBody">amount_in         = 1000</text>
+    <text x="18" y="88" class="panelBody">amount_in_effective = 997</text>
+    <text x="18" y="110" class="panelBody">quote.lower       = 38905</text>
+    <text x="18" y="132" class="panelBody">quote.upper       = 38906</text>
+    <text x="18" y="154" class="panelBody">write_path.out    = lower (conservative)</text>
+  </g>
+
+  <g transform="translate(800, 170)">
+    <rect x="0" y="0" width="360" height="190" rx="16" class="panel" />
+    <text x="18" y="34" class="panelTitle">Witness Explorer</text>
+    <text x="18" y="66" class="panelBody">lower &lt;= ideal &lt;= upper</text>
+    <text x="18" y="88" class="panelBody">pricing.next_reserve_in = 100997</text>
+    <text x="18" y="110" class="panelBody">reserve_out.after_upper = 961095</text>
+    <text x="18" y="132" class="panelBody">reserve_out.after_lower = 961094</text>
+    <text x="18" y="154" class="panelBody">witness stays inspectable</text>
+  </g>
+
+  <!-- Row 2 -->
+  <g transform="translate(40, 380)">
+    <rect x="0" y="0" width="360" height="190" rx="16" class="panel" />
+    <text x="18" y="34" class="panelTitle">LP Verifier</text>
+    <text x="18" y="66" class="panelBody">share_supply = 200000</text>
+    <text x="18" y="88" class="panelBody">lp_balance(sender) = 200000</text>
+    <text x="18" y="110" class="panelBody">add/remove proportional</text>
+    <text x="18" y="132" class="panelBody">withdraw requires lp-balances[tx-sender]</text>
+    <text x="18" y="154" class="panelBody">error = ERR-LP-BALANCE</text>
+  </g>
+
+  <g transform="translate(420, 380)">
+    <rect x="0" y="0" width="360" height="190" rx="16" class="panel" />
+    <text x="18" y="34" class="panelTitle">Safety &amp; Bindings</text>
+    <text x="18" y="66" class="panelBody">postConditionMode = Deny</text>
+    <text x="18" y="88" class="panelBody">clarity4.guards   = enabled</text>
+    <text x="18" y="110" class="panelBody">math_domain       = enabled</text>
+    <text x="18" y="132" class="panelBody">hash_bound        = { sbtc: true, quote: true }</text>
+    <text x="18" y="154" class="panelBody">contract-hash?    = visible</text>
+  </g>
+
+  <g transform="translate(800, 380)">
+    <rect x="0" y="0" width="360" height="190" rx="16" class="panel" />
+    <text x="18" y="34" class="panelTitle">Chaos Summary</text>
+    <text x="18" y="66" class="panelBody">artifact.degrade  = pass</text>
+    <text x="18" y="88" class="panelBody">live.fallback     = pass</text>
+    <text x="18" y="110" class="panelBody">mxs.classify      = pass</text>
+    <text x="18" y="132" class="panelBody">boundary.sequence = pass</text>
+    <text x="18" y="154" class="panelBody">pipeline.drift    = pass</text>
+  </g>
+
+  <!-- Row 3 -->
+  <g transform="translate(40, 590)">
+    <rect x="0" y="0" width="1120" height="140" rx="16" class="panel" />
+    <text x="18" y="34" class="panelTitle">Proof Status</text>
+    <text x="18" y="66" class="panelBody">P0 = completed   (lower/upper, root4, rounding)</text>
+    <text x="18" y="88" class="panelBody">P1 = completed   (reserve safety, LP closure, hash-binding)</text>
+    <text x="18" y="110" class="panelBody">P2 = completed   (composition + roundtrip packaging claims)</text>
+  </g>
+</svg>
+

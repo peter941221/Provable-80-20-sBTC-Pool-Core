@@ -96,7 +96,7 @@
     "success": true
   },
   "safety": {
-    "type": "(tuple (clarity4-guard-skeleton-enabled bool) (contract-hash-binding-enabled bool) (min-quote-reserve uint) (min-sbtc-reserve uint) (post-condition-mode-deny-required bool))",
+    "type": "(tuple (clarity4-guard-skeleton-enabled bool) (contract-hash-binding-enabled bool) (math-domain-guard-enabled bool) (max-safe-pow4-input uint) (max-safe-sbtc-at-min-quote uint) (min-quote-reserve uint) (min-sbtc-reserve uint) (post-condition-mode-deny-required bool))",
     "value": {
       "clarity4-guard-skeleton-enabled": {
         "type": "bool",
@@ -104,7 +104,19 @@
       },
       "contract-hash-binding-enabled": {
         "type": "bool",
-        "value": false
+        "value": true
+      },
+      "math-domain-guard-enabled": {
+        "type": "bool",
+        "value": true
+      },
+      "max-safe-pow4-input": {
+        "type": "uint",
+        "value": "4294967295"
+      },
+      "max-safe-sbtc-at-min-quote": {
+        "type": "uint",
+        "value": "135818791"
       },
       "min-quote-reserve": {
         "type": "uint",
@@ -121,8 +133,12 @@
     }
   },
   "binding": {
-    "type": "(tuple (quote-is-mock bool) (quote-token (optional principal)) (sbtc-is-mock bool) (sbtc-is-requirement bool) (sbtc-token (optional principal)))",
+    "type": "(tuple (quote-hash-bound bool) (quote-is-mock bool) (quote-token (optional principal)) (sbtc-hash-bound bool) (sbtc-is-mock bool) (sbtc-is-requirement bool) (sbtc-token (optional principal)))",
     "value": {
+      "quote-hash-bound": {
+        "type": "bool",
+        "value": true
+      },
       "quote-is-mock": {
         "type": "bool",
         "value": true
@@ -133,6 +149,10 @@
           "type": "principal",
           "value": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-quote"
         }
+      },
+      "sbtc-hash-bound": {
+        "type": "bool",
+        "value": true
       },
       "sbtc-is-mock": {
         "type": "bool",
@@ -166,5 +186,18 @@
       "value": "0x7831151ee058ae1f7e16a4537d92fa53445a26e2f4aff7225f0591be51b117e4"
     },
     "success": true
+  },
+  "lpBalance": {
+    "type": "(tuple (balance uint) (owner principal))",
+    "value": {
+      "balance": {
+        "type": "uint",
+        "value": "200000"
+      },
+      "owner": {
+        "type": "principal",
+        "value": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM"
+      }
+    }
   }
 }

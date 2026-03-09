@@ -12,9 +12,36 @@
         <p class="eyebrow">Provable 80/20 sBTC Pool Core</p>
         <h1>Judge Console</h1>
         <p class="lead">
-          A static Week 2 shell for demonstrating correctness, witness data, safety, and proof claims.
+          A judge-facing console for demonstrating correctness, witness data, safety, proof claims, and live readonly evidence.
         </p>
       </header>
+
+      <section class="controls">
+        <div class="control-grid">
+          <label>
+            <span>API URL</span>
+            <input id="api-url" value="http://127.0.0.1:3999" />
+          </label>
+          <label>
+            <span>Contract Principal</span>
+            <input id="contract-principal" placeholder="ST...pool-80-20" />
+          </label>
+          <label>
+            <span>Sender Address</span>
+            <input id="sender-address" placeholder="ST..." />
+          </label>
+          <label>
+            <span>Quote Amount</span>
+            <input id="quote-amount" value="1000" />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="load-artifact" type="button">Load Artifact Bundle</button>
+          <button id="load-live" type="button">Load Live Readonly</button>
+          <span class="source-badge" id="source-badge">Source: artifact bundle</span>
+        </div>
+      </section>
 
       <section class="grid" id="panels"></section>
     </main>

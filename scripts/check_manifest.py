@@ -8,6 +8,7 @@ REQUIRED = [
     "proof-status.json",
     "demo-manifest.json",
     "vector-pack.json",
+    "claim-matrix.json",
 ]
 
 

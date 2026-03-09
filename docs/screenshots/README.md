@@ -1,0 +1,15 @@
+# Screenshots
+
+This folder holds judge-facing visuals for the README / hackathon submission.
+
+Current file:
+
+- `judge-console-panels.svg`: a lightweight generated preview of the Judge Console panels.
+
+To capture real screenshots (manual):
+
+1. Run `npm run validate:chaos` (ensures artifacts + chaos report exist).
+2. Run `python -m http.server 8000`.
+3. Open `http://127.0.0.1:8000/frontend/judge-console/`.
+4. Use your browser's screenshot tool and replace the SVG with PNGs if desired.
+

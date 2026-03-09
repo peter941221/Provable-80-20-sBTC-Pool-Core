@@ -1,0 +1,32 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Clarinet
+        run: |
+          wget -nv https://github.com/stx-labs/clarinet/releases/latest/download/clarinet-linux-x64-glibc.tar.gz -O clarinet-linux-x64.tar.gz
+          tar -xf clarinet-linux-x64.tar.gz
+          chmod +x ./clarinet
+          sudo mv ./clarinet /usr/local/bin/clarinet
+          clarinet --version
+
+      - run: npm ci
+      - run: npm run validate:chaos

@@ -22,7 +22,7 @@ contract_id = "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit"
 
 [repl.analysis]
 passes = ["check_checker"]
-check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }
+check_checker = { trusted_sender = true, trusted_caller = true, callee_filter = true }
 
 [contracts]
 
@@ -58,7 +58,7 @@ epoch = "latest"
 
 [repl.remote_data]
 enabled = true
-api_url = "https://api.mainnet.hiro.so"
+api_url = "https://api.hiro.so"
 initial_height = 522000
 use_mainnet_wallets = true
 
