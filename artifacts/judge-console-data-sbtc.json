@@ -1,7 +1,7 @@
 {
   "scenario": {
-    "id": "mock",
-    "label": "mock-sbtc + mock-quote"
+    "id": "sbtc-requirement",
+    "label": "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token + mock-quote"
   },
   "source": "simnet-readonly",
   "poolState": {
@@ -160,17 +160,17 @@
       },
       "sbtc-is-mock": {
         "type": "bool",
-        "value": true
+        "value": false
       },
       "sbtc-is-requirement": {
         "type": "bool",
-        "value": false
+        "value": true
       },
       "sbtc-token": {
         "type": "(optional principal)",
         "value": {
           "type": "principal",
-          "value": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-sbtc"
+          "value": "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"
         }
       }
     }
@@ -179,7 +179,7 @@
     "type": "(response (buff 32) UnknownType)",
     "value": {
       "type": "(buff 32)",
-      "value": "0xc6f13a530c6e3e05c70eb1787c112f8fd8821e6c93a57a76d8aa5101945d0f6c"
+      "value": "0x8e9532324df8d73c59af4b30e8a481cd478a86c3907eede2f2cc2a0345adf149"
     },
     "success": true
   },

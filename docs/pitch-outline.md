@@ -40,5 +40,5 @@ It wins by making correctness visible, bounded, and believable.
 ## Next Steps
 
 1. Harden hash-enforced bindings on write paths
-2. Reduce the remaining static-analysis warning surface where practical
-3. Package the repo, demo, README, and claim matrix into one final submission story
+2. Expand the judge console vectors and keep the demo fully replayable (artifact + live readonly)
+3. Package the final submission story: README, claim matrix, demo script, and screenshots/gifs

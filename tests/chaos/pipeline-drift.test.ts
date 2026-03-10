@@ -76,6 +76,39 @@ describe("chaos L5: pipeline drift detection", () => {
     }
   });
 
+  it("keeps artifacts/judge-console-data-sbtc.json shape aligned and shows sbtc-is-requirement=true", async () => {
+    const data = JSON.parse(
+      await readFile("artifacts/judge-console-data-sbtc.json", "utf8"),
+    ) as Record<string, unknown>;
+
+    for (const key of [
+      "poolState",
+      "quote",
+      "witness",
+      "safety",
+      "binding",
+      "sbtcHash",
+      "quoteHash",
+      "lpBalance",
+    ]) {
+      expect(data[key]).toBeDefined();
+    }
+
+    const binding = data.binding as { value?: Record<string, { value?: unknown }> } | undefined;
+    expect(binding?.value?.["sbtc-is-requirement"]?.value).toBe(true);
+  });
+
+  it("keeps artifacts/submission-snapshot.json present with the expected top-level keys", async () => {
+    const data = JSON.parse(
+      await readFile("artifacts/submission-snapshot.json", "utf8"),
+    ) as Record<string, unknown>;
+
+    expect(data.version).toBe(1);
+    expect(data.git).toBeDefined();
+    expect(data.env).toBeDefined();
+    expect(data.generated_at).toBeDefined();
+  });
+
   it("keeps artifacts/proof-status.json claim structure aligned with the console", async () => {
     const proof = JSON.parse(
       await readFile("artifacts/proof-status.json", "utf8"),

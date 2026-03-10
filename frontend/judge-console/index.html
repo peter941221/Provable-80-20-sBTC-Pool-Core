@@ -19,6 +19,26 @@
       <section class="controls">
         <div class="control-grid">
           <label>
+            <span>Vector</span>
+            <select id="vector-id">
+              <option value="">Manual inputs</option>
+            </select>
+          </label>
+          <label>
+            <span>Dataset</span>
+            <select id="dataset-id">
+              <option value="mock">mock-sbtc (artifact)</option>
+              <option value="sbtc">official sbtc-token (requirement)</option>
+            </select>
+          </label>
+          <label>
+            <span>Manual Direction</span>
+            <select id="manual-direction">
+              <option value="sbtc-in">sbtc-in</option>
+              <option value="quote-in">quote-in</option>
+            </select>
+          </label>
+          <label>
             <span>API URL</span>
             <input id="api-url" value="http://127.0.0.1:3999" />
           </label>
@@ -31,7 +51,7 @@
             <input id="sender-address" placeholder="ST..." />
           </label>
           <label>
-            <span>Quote Amount</span>
+            <span>Manual Amount In</span>
             <input id="quote-amount" value="1000" />
           </label>
         </div>

@@ -41,6 +41,12 @@ export async function loadArtifactBundle({ loadJson, basePath = "../../artifacts
     { phase: "unknown", status: "unavailable", claims: [] },
     issues,
   );
+  const submissionSnapshot = await safeLoadJson(
+    loadJson,
+    joinPath(basePath, "submission-snapshot.json"),
+    { version: 1, generated_by: "fallback", generated_at: null, git: {}, env: {} },
+    issues,
+  );
   const manifest = await safeLoadJson(
     loadJson,
     joinPath(basePath, "demo-manifest.json"),
@@ -53,9 +59,15 @@ export async function loadArtifactBundle({ loadJson, basePath = "../../artifacts
     { overview: { invariant: "n/a", claim: "n/a" }, safety: {} },
     issues,
   );
-  const live = await safeLoadJson(
+  const liveMock = await safeLoadJson(
     loadJson,
     joinPath(basePath, "judge-console-data.json"),
+    { source: "artifact-missing" },
+    issues,
+  );
+  const liveSbtc = await safeLoadJson(
+    loadJson,
+    joinPath(basePath, "judge-console-data-sbtc.json"),
     { source: "artifact-missing" },
     issues,
   );
@@ -71,14 +83,26 @@ export async function loadArtifactBundle({ loadJson, basePath = "../../artifacts
     { version: 1, generated_by: "fallback", claims: [] },
     issues,
   );
+  const vectorPack = await safeLoadJson(
+    loadJson,
+    joinPath(basePath, "vector-pack.json"),
+    { version: 1, generated_by: "fallback", config: {}, vectors: [] },
+    issues,
+  );
 
   return {
     proof,
+    submissionSnapshot,
     manifest,
     snapshot,
-    live,
+    live: liveMock,
+    liveVariants: {
+      mock: liveMock,
+      sbtc: liveSbtc,
+    },
     chaosReport,
     claimMatrix,
+    vectorPack,
     sourceLabel: issues.length ? "artifact bundle (degraded)" : "artifact bundle",
     issues,
   };

@@ -1,16 +1,140 @@
 import json
+import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACTS = ROOT / "artifacts"
 
+DEMO_RESERVE_SBTC = 200_000
+DEMO_RESERVE_QUOTE = 2_000_000
+DEMO_FEE_BPS = 30
+DEMO_MAX_TRADE_BPS = 1_000
+
 
 def write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+def to_strings(payload: dict) -> dict:
+    return {key: str(value) for key, value in payload.items()}
+
+
+def swap_vector(model, direction: str, amount_in: int) -> dict:
+    if direction == "sbtc-in":
+        data = model.quote_sbtc_in(
+            DEMO_RESERVE_SBTC,
+            DEMO_RESERVE_QUOTE,
+            DEMO_FEE_BPS,
+            DEMO_MAX_TRADE_BPS,
+            amount_in,
+        )
+        witness = {
+            "amount-in": data["amount_in"],
+            "amount-in-effective": data["amount_in_effective"],
+            "amount-out-lower": data["amount_out_lower"],
+            "amount-out-upper": data["amount_out_upper"],
+            "invariant": data["invariant"],
+            "reserve-in": data["reserve_in"],
+            "reserve-out": data["reserve_out"],
+            "trade-limit": data["trade_limit"],
+            "next-reserve-in-pricing": data["next_reserve_in_pricing"],
+            "pricing-denominator": data["pricing_denominator"],
+            "reserve-out-after-upper": data["reserve_out_after_upper"],
+            "reserve-out-after-lower": data["reserve_out_after_lower"],
+        }
+    elif direction == "quote-in":
+        data = model.quote_quote_in(
+            DEMO_RESERVE_SBTC,
+            DEMO_RESERVE_QUOTE,
+            DEMO_FEE_BPS,
+            DEMO_MAX_TRADE_BPS,
+            amount_in,
+        )
+        witness = {
+            "amount-in": data["amount_in"],
+            "amount-in-effective": data["amount_in_effective"],
+            "amount-out-lower": data["amount_out_lower"],
+            "amount-out-upper": data["amount_out_upper"],
+            "invariant": data["invariant"],
+            "reserve-in": data["reserve_in"],
+            "reserve-out": data["reserve_out"],
+            "trade-limit": data["trade_limit"],
+            "next-reserve-in-pricing": data["next_reserve_in_pricing"],
+            "reserve-out-input-upper": data["reserve_out_input_upper"],
+            "reserve-out-input-lower": data["reserve_out_input_lower"],
+            "reserve-out-after-upper": data["reserve_out_after_upper"],
+            "reserve-out-after-lower": data["reserve_out_after_lower"],
+        }
+    else:
+        raise ValueError(f"unsupported direction: {direction}")
+
+    quote = {
+        "amount-in-effective": data["amount_in_effective"],
+        "amount-out-lower": data["amount_out_lower"],
+        "amount-out-upper": data["amount_out_upper"],
+        "trade-limit": data["trade_limit"],
+    }
+
+    return {
+        "id": f"swap-{direction}-{amount_in}",
+        "kind": "swap",
+        "direction": direction,
+        "amount_in": amount_in,
+        "expected_quote": to_strings(quote),
+        "expected_witness": to_strings(witness),
+    }
+
+
+def lp_add_vector(model, sbtc_amount: int, quote_amount: int) -> dict:
+    data = model.add_liquidity(
+        DEMO_RESERVE_SBTC,
+        DEMO_RESERVE_QUOTE,
+        DEMO_RESERVE_SBTC,
+        sbtc_amount,
+        quote_amount,
+    )
+    result = {
+        "minted-shares": data["minted_shares"],
+        "reserve-sbtc": data["reserve_sbtc"],
+        "reserve-quote": data["reserve_quote"],
+        "share-supply": data["share_supply"],
+    }
+    return {
+        "id": f"lp-add-{sbtc_amount}-{quote_amount}",
+        "kind": "lp-add",
+        "sbtc_amount": sbtc_amount,
+        "quote_amount": quote_amount,
+        "expected_result": to_strings(result),
+    }
+
+
+def lp_remove_vector(model, share_amount: int) -> dict:
+    data = model.remove_liquidity(
+        DEMO_RESERVE_SBTC,
+        DEMO_RESERVE_QUOTE,
+        DEMO_RESERVE_SBTC,
+        share_amount,
+    )
+    result = {
+        "amount-sbtc": data["amount_sbtc"],
+        "amount-quote": data["amount_quote"],
+        "reserve-sbtc": data["reserve_sbtc"],
+        "reserve-quote": data["reserve_quote"],
+        "share-supply": data["share_supply"],
+    }
+    return {
+        "id": f"lp-remove-{share_amount}",
+        "kind": "lp-remove",
+        "share_amount": share_amount,
+        "expected_result": to_strings(result),
+    }
+
+
 def main() -> None:
+    sys.path.insert(0, str(ROOT))
+    import sim.reference_model as model  # noqa: PLC0415
+
     ARTIFACTS.mkdir(exist_ok=True)
 
     claim_matrix = [
@@ -37,10 +161,10 @@ def main() -> None:
         {
             "id": "CL-03",
             "claim": "LP add/remove stays proportional, withdrawals require LP share ownership, and share accounting remains closed over share-supply + lp-balances",
-            "contract": ["add-liquidity", "remove-liquidity", "get-lp-balance"],
+            "contract": ["add-liquidity", "remove-liquidity", "quote-add-shares", "quote-remove-shares", "get-lp-balance"],
             "proof": ["addLiquidity_share_closed", "removeLiquidity_share_closed", "addLiquidity_reserves_increase", "removeLiquidity_reserves_decrease", "add_remove_roundtrip_exact"],
             "tests": ["tests/unit/pool-80-20.test.ts", "tests/differential/reference-model.test.ts"],
-            "artifacts": ["artifacts/judge-console-data.json"],
+            "artifacts": ["artifacts/vector-pack.json", "artifacts/judge-console-data.json"],
             "panel": "LP Verifier",
             "status": "proved-and-tested",
         },
@@ -79,7 +203,7 @@ def main() -> None:
             "contract": ["SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token", "SP000000000000000000002Q6VF78.pox-4"],
             "proof": [],
             "tests": ["tests/unit/sbtc-requirement.test.ts", "tests/mxs/mainnet-realism.test.ts"],
-            "artifacts": ["Clarinet.mxs.toml"],
+            "artifacts": ["Clarinet.mxs.toml", "artifacts/judge-console-data-sbtc.json"],
             "panel": "Overview",
             "status": "tested",
         },
@@ -217,25 +341,31 @@ def main() -> None:
         {
             "version": 1,
             "generated_by": "scripts/gen_artifacts.py",
+            "config": {
+                "reserve_sbtc": DEMO_RESERVE_SBTC,
+                "reserve_quote": DEMO_RESERVE_QUOTE,
+                "fee_bps": DEMO_FEE_BPS,
+                "max_trade_bps": DEMO_MAX_TRADE_BPS,
+            },
             "vectors": [
-                {
-                    "id": "swap-sbtc-in-1000",
-                    "direction": "sbtc-in",
-                    "amount_in": 1000,
-                    "amount_out_lower": 38905,
-                    "amount_out_upper": 38906,
-                },
-                {
-                    "id": "swap-quote-in-2000",
-                    "direction": "quote-in",
-                    "amount_in": 2000,
-                    "amount_out_lower": 49,
-                    "amount_out_upper": 50,
-                },
+                swap_vector(model, "sbtc-in", 100),
+                swap_vector(model, "sbtc-in", 1000),
+                swap_vector(model, "sbtc-in", 20_000),
+                swap_vector(model, "quote-in", 2000),
+                swap_vector(model, "quote-in", 200_000),
+                lp_add_vector(model, 1000, 10_000),
+                lp_remove_vector(model, 1000),
             ],
         },
     )
 
+    demo_sample = model.quote_sbtc_in(
+        DEMO_RESERVE_SBTC,
+        DEMO_RESERVE_QUOTE,
+        DEMO_FEE_BPS,
+        DEMO_MAX_TRADE_BPS,
+        1000,
+    )
     write_json(
         ARTIFACTS / "console-snapshot.json",
         {
@@ -246,15 +376,15 @@ def main() -> None:
             },
             "sample_swap": {
                 "amount_in": 1000,
-                "amount_in_effective": 997,
-                "amount_out_lower": 38905,
-                "amount_out_upper": 38906,
+                "amount_in_effective": demo_sample["amount_in_effective"],
+                "amount_out_lower": demo_sample["amount_out_lower"],
+                "amount_out_upper": demo_sample["amount_out_upper"],
             },
             "safety": {
                 "post_condition_mode": "Deny",
                 "guard_enabled": True,
                 "math_domain_guard_enabled": True,
-                "binding_status": "mock-sbtc + mock-quote",
+                "binding_status": "mock-sbtc + mock-quote (default) + official sbtc-token dataset",
             },
         },
     )

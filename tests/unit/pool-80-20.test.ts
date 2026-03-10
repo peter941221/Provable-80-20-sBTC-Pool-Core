@@ -386,6 +386,56 @@ describe("pool-80-20 shell", () => {
     );
   });
 
+  it("quotes proportional LP share math for add/remove", () => {
+    initializePoolWithBuffer();
+
+    const addQuote = simnet.callReadOnlyFn(
+      "pool-80-20",
+      "quote-add-shares",
+      [Cl.uint(1000), Cl.uint(10000)],
+      deployer,
+    );
+
+    expect(addQuote.result).toBeOk(
+      Cl.tuple({
+        "minted-shares": Cl.uint(1000),
+        "reserve-sbtc": Cl.uint(201000),
+        "reserve-quote": Cl.uint(2010000),
+        "share-supply": Cl.uint(201000),
+      }),
+    );
+
+    const removeQuote = simnet.callReadOnlyFn(
+      "pool-80-20",
+      "quote-remove-shares",
+      [Cl.uint(1000)],
+      deployer,
+    );
+
+    expect(removeQuote.result).toBeOk(
+      Cl.tuple({
+        "amount-sbtc": Cl.uint(1000),
+        "amount-quote": Cl.uint(10000),
+        "reserve-sbtc": Cl.uint(199000),
+        "reserve-quote": Cl.uint(1990000),
+        "share-supply": Cl.uint(199000),
+      }),
+    );
+  });
+
+  it("rejects non-proportional quote-add-shares", () => {
+    initializePoolWithBuffer();
+
+    const addQuote = simnet.callReadOnlyFn(
+      "pool-80-20",
+      "quote-add-shares",
+      [Cl.uint(1000), Cl.uint(9000)],
+      deployer,
+    );
+
+    expect(addQuote.result).toBeErr(Cl.uint(410));
+  });
+
   it("rejects proportional liquidity additions that would leave the explicit math domain", () => {
     seedBalances(MAX_SAFE_SBTC_AT_MIN_QUOTE * 2n, 2000000n);
     initializePoolWithAmounts(MAX_SAFE_SBTC_AT_MIN_QUOTE, 1000000n);

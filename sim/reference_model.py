@@ -39,10 +39,18 @@ def quote_sbtc_in(reserve_sbtc: int, reserve_quote: int, fee_bps: int, max_trade
     reserve_out_after_upper = ceil_div(invariant, pow4(reserve_sbtc + effective_in))
     reserve_out_after_lower = invariant // pow4(reserve_sbtc + effective_in)
     return {
+        "amount_in": amount_in,
+        "reserve_in": reserve_sbtc,
+        "reserve_out": reserve_quote,
         "amount_in_effective": effective_in,
         "amount_out_lower": max(reserve_quote - reserve_out_after_upper, 0),
         "amount_out_upper": max(reserve_quote - reserve_out_after_lower, 0),
         "trade_limit": trade_limit,
+        "invariant": invariant,
+        "next_reserve_in_pricing": reserve_sbtc + effective_in,
+        "pricing_denominator": pow4(reserve_sbtc + effective_in),
+        "reserve_out_after_upper": reserve_out_after_upper,
+        "reserve_out_after_lower": reserve_out_after_lower,
     }
 
 
@@ -55,10 +63,19 @@ def quote_quote_in(reserve_sbtc: int, reserve_quote: int, fee_bps: int, max_trad
     reserve_out_after_upper = ceil_root4(reserve_out_input_upper)
     reserve_out_after_lower = floor_root4(reserve_out_input_lower)
     return {
+        "amount_in": amount_in,
+        "reserve_in": reserve_quote,
+        "reserve_out": reserve_sbtc,
         "amount_in_effective": effective_in,
         "amount_out_lower": max(reserve_sbtc - reserve_out_after_upper, 0),
         "amount_out_upper": max(reserve_sbtc - reserve_out_after_lower, 0),
         "trade_limit": trade_limit,
+        "invariant": invariant,
+        "next_reserve_in_pricing": reserve_quote + effective_in,
+        "reserve_out_input_upper": reserve_out_input_upper,
+        "reserve_out_input_lower": reserve_out_input_lower,
+        "reserve_out_after_upper": reserve_out_after_upper,
+        "reserve_out_after_lower": reserve_out_after_lower,
     }
 
 

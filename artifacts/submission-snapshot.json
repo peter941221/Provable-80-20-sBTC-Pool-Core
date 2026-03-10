@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "generated_by": "scripts/gen_submission_snapshot.mjs",
+  "generated_at": "2026-03-10T00:57:35.664Z",
+  "git": {
+    "commit": "897cd81250559a57bac9f5b5534ce6f6595e3055",
+    "commit_short": "897cd81",
+    "dirty": true
+  },
+  "env": {
+    "node": "v24.12.0",
+    "npm": "unknown",
+    "clarinet": "clarinet 3.14.1"
+  },
+  "recommended": {
+    "full_validation": "npm run validate:full",
+    "judge_console": [
+      "npm run validate:chaos",
+      "python -m http.server 8000",
+      "open http://127.0.0.1:8000/frontend/judge-console/"
+    ]
+  }
+}

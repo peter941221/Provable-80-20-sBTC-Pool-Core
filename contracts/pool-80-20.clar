@@ -580,6 +580,87 @@
   )
 )
 
+(define-read-only (quote-add-shares (sbtc-amount uint) (quote-amount uint))
+  (begin
+    (try! (assert-initialized))
+    (try! (assert-positive sbtc-amount))
+    (try! (assert-positive quote-amount))
+    (try! (assert-sbtc-hash-bound))
+    (try! (assert-quote-hash-bound))
+    (let (
+      (reserve-sbtc-now (var-get reserve-sbtc))
+      (reserve-quote-now (var-get reserve-quote))
+      (share-supply-now (var-get share-supply))
+    )
+      (try! (assert-safe-reserves reserve-sbtc-now reserve-quote-now))
+      (try! (assert-add-safe reserve-sbtc-now sbtc-amount))
+      (try! (assert-add-safe reserve-quote-now quote-amount))
+      (let (
+        (next-reserve-sbtc (+ reserve-sbtc-now sbtc-amount))
+        (next-reserve-quote (+ reserve-quote-now quote-amount))
+      )
+        (try! (assert-safe-reserves next-reserve-sbtc next-reserve-quote))
+        (try! (assert-mul-safe sbtc-amount reserve-quote-now))
+        (try! (assert-mul-safe quote-amount reserve-sbtc-now))
+        (asserts! (is-eq (* sbtc-amount reserve-quote-now) (* quote-amount reserve-sbtc-now)) (err ERR-LP-RATIO))
+        (try! (assert-mul-safe sbtc-amount share-supply-now))
+        (let (
+          (minted-shares (/ (* sbtc-amount share-supply-now) reserve-sbtc-now))
+        )
+          (try! (assert-positive minted-shares))
+          (ok {
+            minted-shares: minted-shares,
+            reserve-sbtc: next-reserve-sbtc,
+            reserve-quote: next-reserve-quote,
+            share-supply: (+ share-supply-now minted-shares),
+          })
+        )
+      )
+    )
+  )
+)
+
+(define-read-only (quote-remove-shares (share-amount uint))
+  (begin
+    (try! (assert-initialized))
+    (try! (assert-positive share-amount))
+    (try! (assert-share-amount share-amount))
+    (try! (assert-sbtc-hash-bound))
+    (try! (assert-quote-hash-bound))
+    (try! (assert-lp-balance tx-sender share-amount))
+    (let (
+      (reserve-sbtc-now (var-get reserve-sbtc))
+      (reserve-quote-now (var-get reserve-quote))
+      (share-supply-now (var-get share-supply))
+    )
+      (try! (assert-safe-reserves reserve-sbtc-now reserve-quote-now))
+      (try! (assert-mul-safe share-amount reserve-sbtc-now))
+      (try! (assert-mul-safe share-amount reserve-quote-now))
+      (let (
+        (amount-sbtc (/ (* share-amount reserve-sbtc-now) share-supply-now))
+        (amount-quote (/ (* share-amount reserve-quote-now) share-supply-now))
+      )
+        (let (
+          (next-reserve-sbtc (saturating-sub reserve-sbtc-now amount-sbtc))
+          (next-reserve-quote (saturating-sub reserve-quote-now amount-quote))
+          (next-share-supply (- share-supply-now share-amount))
+        )
+          (asserts! (>= next-reserve-sbtc MIN-SBTC-RESERVE) (err ERR-MIN-SBTC-RESERVE))
+          (asserts! (>= next-reserve-quote MIN-QUOTE-RESERVE) (err ERR-MIN-QUOTE-RESERVE))
+          (try! (assert-safe-reserves next-reserve-sbtc next-reserve-quote))
+          (ok {
+            amount-sbtc: amount-sbtc,
+            amount-quote: amount-quote,
+            reserve-sbtc: next-reserve-sbtc,
+            reserve-quote: next-reserve-quote,
+            share-supply: next-share-supply,
+          })
+        )
+      )
+    )
+  )
+)
+
 (define-public (initialize (sbtc <ft-trait>) (quote <ft-trait>) (initial-sbtc uint) (initial-quote uint) (pool-fee-bps uint) (pool-max-trade-bps uint))
   (begin
     (asserts! (not (var-get initialized)) (err ERR-ALREADY-INITIALIZED))

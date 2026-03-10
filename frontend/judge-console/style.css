@@ -74,7 +74,8 @@ h1 {
   font-size: 14px;
 }
 
-.controls input {
+.controls input,
+.controls select {
   width: 100%;
   padding: 10px 12px;
   border-radius: 10px;

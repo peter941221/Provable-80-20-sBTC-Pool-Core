@@ -32,10 +32,16 @@ const root = document.querySelector("#panels");
 const sourceBadge = document.querySelector("#source-badge");
 const loadArtifactButton = document.querySelector("#load-artifact");
 const loadLiveButton = document.querySelector("#load-live");
+const vectorIdSelect = document.querySelector("#vector-id");
+const datasetIdSelect = document.querySelector("#dataset-id");
+const manualDirectionSelect = document.querySelector("#manual-direction");
 const apiUrlInput = document.querySelector("#api-url");
 const contractPrincipalInput = document.querySelector("#contract-principal");
 const senderAddressInput = document.querySelector("#sender-address");
 const quoteAmountInput = document.querySelector("#quote-amount");
+
+let currentBundle = null;
+let didAutoSelectDefaultVector = false;
 
 const messageRoot = document.createElement("section");
 messageRoot.id = "messages";
@@ -63,6 +69,43 @@ function panelBodies() {
   return root.querySelectorAll(".panel p");
 }
 
+function vectorList(bundle) {
+  return bundle?.vectorPack?.vectors ?? [];
+}
+
+function populateVectorOptions(vectors) {
+  const previousSelection = vectorIdSelect.value;
+  vectorIdSelect.innerHTML = '<option value="">Manual inputs</option>';
+
+  for (const vector of vectors) {
+    const option = document.createElement("option");
+    option.value = vector.id;
+    const kind = vector.kind ? ` · ${vector.kind}` : "";
+    option.textContent = `${vector.id}${kind}`;
+    vectorIdSelect.append(option);
+  }
+
+  vectorIdSelect.value = previousSelection;
+}
+
+function ensureDefaultVector(vectors) {
+  if (didAutoSelectDefaultVector) return;
+  if (vectorIdSelect.value) {
+    didAutoSelectDefaultVector = true;
+    return;
+  }
+  const preferred = vectors.find((vector) => vector.id === "swap-sbtc-in-1000") ?? vectors[0];
+  if (!preferred) return;
+  vectorIdSelect.value = preferred.id;
+  didAutoSelectDefaultVector = true;
+}
+
+function selectedVector(bundle) {
+  const id = vectorIdSelect.value;
+  if (!id) return null;
+  return vectorList(bundle).find((vector) => vector.id === id) ?? null;
+}
+
 function unwrapTypedValue(node) {
   return node?.value;
 }
@@ -76,8 +119,26 @@ function typedValueOrNA(node) {
   return value ?? "n/a";
 }
 
-function setSource(label) {
-  sourceBadge.textContent = `Source: ${label}`;
+function datasetLabel(id) {
+  if (id === "sbtc") return "official sbtc-token (requirement)";
+  return "mock-sbtc (artifact)";
+}
+
+function selectedDatasetId(bundle) {
+  if (bundle?.live?.source === "browser-live-readonly") return null;
+  if (!bundle?.liveVariants) return null;
+  return datasetIdSelect?.value || "mock";
+}
+
+function resolveLive(bundle) {
+  const datasetId = selectedDatasetId(bundle);
+  if (!datasetId) return bundle.live ?? {};
+  return bundle.liveVariants?.[datasetId] ?? bundle.live ?? {};
+}
+
+function setSource(label, datasetId) {
+  const datasetSuffix = datasetId ? ` · dataset=${datasetId}` : "";
+  sourceBadge.textContent = `Source: ${label}${datasetSuffix}`;
 }
 
 function clearMessages() {
@@ -173,22 +234,83 @@ async function loadLiveBundle() {
   if (!senderAddress) {
     throw inputError("enter a sender address before loading live readonly data");
   }
+  if (!senderAddressInput.value.trim()) {
+    senderAddressInput.value = senderAddress;
+  }
 
-  const amount = BigInt(quoteAmountInput.value || "1000");
   const apiUrl = apiUrlInput.value.trim();
 
   const base = await loadArtifactBundle({ loadJson });
 
-  const [poolState, quote, witness, safety, binding, sbtcHash, quoteHash, lpBalance] = await Promise.all([
-    callReadOnly(apiUrl, contractPrincipal, "get-pool-state", [], senderAddress),
-    callReadOnly(apiUrl, contractPrincipal, "quote-sbtc-in", [uintCV(amount)], senderAddress),
-    callReadOnly(apiUrl, contractPrincipal, "debug-sbtc-in", [uintCV(amount)], senderAddress),
-    callReadOnly(apiUrl, contractPrincipal, "get-safety-envelope", [], senderAddress),
-    callReadOnly(apiUrl, contractPrincipal, "get-binding-status", [], senderAddress),
-    callReadOnly(apiUrl, contractPrincipal, "get-sbtc-contract-hash", [], senderAddress),
-    callReadOnly(apiUrl, contractPrincipal, "get-quote-contract-hash", [], senderAddress),
-    callReadOnly(apiUrl, contractPrincipal, "get-lp-balance", [standardPrincipalCV(senderAddress)], senderAddress),
-  ]);
+  populateVectorOptions(vectorList(base));
+  ensureDefaultVector(vectorList(base));
+
+  const vector = selectedVector(base);
+  const manualDirection = manualDirectionSelect.value;
+  const manualAmount = BigInt(quoteAmountInput.value || "1000");
+
+  let quotePromise = Promise.resolve(null);
+  let witnessPromise = Promise.resolve(null);
+
+  if (vector?.kind === "swap") {
+    const amount = BigInt(vector.amount_in);
+    const direction = vector.direction;
+    const quoteFn = direction === "quote-in" ? "quote-quote-in" : "quote-sbtc-in";
+    const debugFn = direction === "quote-in" ? "debug-quote-in" : "debug-sbtc-in";
+    quotePromise = callReadOnly(apiUrl, contractPrincipal, quoteFn, [uintCV(amount)], senderAddress);
+    witnessPromise = callReadOnly(apiUrl, contractPrincipal, debugFn, [uintCV(amount)], senderAddress);
+  } else if (vector?.kind === "lp-add") {
+    quotePromise = callReadOnly(
+      apiUrl,
+      contractPrincipal,
+      "quote-add-shares",
+      [uintCV(BigInt(vector.sbtc_amount)), uintCV(BigInt(vector.quote_amount))],
+      senderAddress,
+    );
+  } else if (vector?.kind === "lp-remove") {
+    quotePromise = callReadOnly(
+      apiUrl,
+      contractPrincipal,
+      "quote-remove-shares",
+      [uintCV(BigInt(vector.share_amount))],
+      senderAddress,
+    );
+  } else {
+    const quoteFn = manualDirection === "quote-in" ? "quote-quote-in" : "quote-sbtc-in";
+    const debugFn = manualDirection === "quote-in" ? "debug-quote-in" : "debug-sbtc-in";
+    quotePromise = callReadOnly(
+      apiUrl,
+      contractPrincipal,
+      quoteFn,
+      [uintCV(manualAmount)],
+      senderAddress,
+    );
+    witnessPromise = callReadOnly(
+      apiUrl,
+      contractPrincipal,
+      debugFn,
+      [uintCV(manualAmount)],
+      senderAddress,
+    );
+  }
+
+  const [poolState, safety, binding, sbtcHash, quoteHash, lpBalance, quote, witness] =
+    await Promise.all([
+      callReadOnly(apiUrl, contractPrincipal, "get-pool-state", [], senderAddress),
+      callReadOnly(apiUrl, contractPrincipal, "get-safety-envelope", [], senderAddress),
+      callReadOnly(apiUrl, contractPrincipal, "get-binding-status", [], senderAddress),
+      callReadOnly(apiUrl, contractPrincipal, "get-sbtc-contract-hash", [], senderAddress),
+      callReadOnly(apiUrl, contractPrincipal, "get-quote-contract-hash", [], senderAddress),
+      callReadOnly(
+        apiUrl,
+        contractPrincipal,
+        "get-lp-balance",
+        [standardPrincipalCV(senderAddress)],
+        senderAddress,
+      ),
+      quotePromise,
+      witnessPromise,
+    ]);
 
   const metadataSuffix = base.issues?.length ? " (artifact metadata degraded)" : "";
 
@@ -211,14 +333,17 @@ async function loadLiveBundle() {
 
 function render(bundle) {
   const bodies = panelBodies();
-  const live = bundle.live;
-  const poolState = live.poolState.value ?? live.poolState;
-  const quote = live.quote.value?.value ?? live.quote.value ?? live.quote;
-  const witness = live.witness.value?.value ?? live.witness.value ?? live.witness;
-  const safety = live.safety.value ?? live.safety;
-  const binding = live.binding?.value ?? live.binding;
+  const datasetId = selectedDatasetId(bundle);
+  const live = resolveLive(bundle);
+  const hasLiveReadonly = live.source === "browser-live-readonly";
+
+  const poolState = live.poolState?.value ?? live.poolState ?? {};
+  const quote = live.quote?.value?.value ?? live.quote?.value ?? live.quote ?? null;
+  const witness = live.witness?.value?.value ?? live.witness?.value ?? live.witness ?? null;
+  const safety = live.safety?.value ?? live.safety ?? {};
+  const binding = live.binding?.value ?? live.binding ?? null;
   const claims = bundle.claimMatrix.claims ?? [];
-  const lpTuple = live.lpBalance?.value ?? live.lpBalance;
+  const lpTuple = live.lpBalance?.value ?? live.lpBalance ?? null;
   const lpBalance = lpTuple ? uintValue(lpTuple["balance"]) : "n/a";
 
   const overviewInvariant = bundle.snapshot?.overview?.invariant ?? "n/a";
@@ -235,18 +360,92 @@ function render(bundle) {
     .map((experiment) => experiment.experiment_id)
     .join(", ");
 
-  bodies[0].textContent = `${overviewInvariant} · ${overviewClaim} · reserves={sbtc:${uintValue(poolState["reserve-sbtc"])}, quote:${uintValue(poolState["reserve-quote"])}} · claims=${claims.length}`;
-  bodies[1].textContent = `quote lower=${uintValue(quote["amount-out-lower"])} upper=${uintValue(quote["amount-out-upper"])} · source=${live.source ?? "artifact"}`;
-  bodies[2].textContent = `witness effective=${uintValue(witness["amount-in-effective"])} lower=${uintValue(witness["amount-out-lower"])} upper=${uintValue(witness["amount-out-upper"])} · next=${uintValue(witness["next-reserve-in-pricing"] ?? witness["reserve-out-input-upper"] ?? { value: "n/a" })}`;
-  bodies[3].textContent = `share supply=${uintValue(poolState["share-supply"])} · lp balance(sender)=${lpBalance} · CL-03: remove-liquidity requires lp-balances[tx-sender] (ERR-LP-BALANCE)`;
-  bodies[4].textContent = `${bundle.snapshot.safety.post_condition_mode} + guard=${safety["clarity4-guard-skeleton-enabled"]?.value ?? bundle.snapshot.safety.guard_enabled} + mathDomain=${safety["math-domain-guard-enabled"]?.value ?? bundle.snapshot.safety.math_domain_guard_enabled} + hashBound={sbtc:${typedValueOrNA(binding?.["sbtc-hash-bound"])}, quote:${typedValueOrNA(binding?.["quote-hash-bound"])}} + sbtcHash=${live.sbtcHash.value?.value ?? live.sbtcHash.value ?? "n/a"}`;
+  const submission = bundle.submissionSnapshot ?? {};
+  const submissionCommit = submission?.git?.commit_short ?? "n/a";
+  const submissionWhen = submission?.generated_at ?? "n/a";
+
+  const vector = selectedVector(bundle);
+  const manualLabel = `manual ${manualDirectionSelect.value} ${quoteAmountInput.value || "n/a"}`;
+  const selectionLabel = vector ? `${vector.id}` : manualLabel;
+
+  bodies[0].textContent =
+    `${overviewInvariant} · ${overviewClaim} · reserves={sbtc:${typedValueOrNA(poolState["reserve-sbtc"])}, quote:${typedValueOrNA(poolState["reserve-quote"])}}` +
+    (datasetId ? ` · ${datasetLabel(datasetId)}` : "") +
+    ` · commit=${submissionCommit} @ ${submissionWhen}` +
+    ` · vector=${selectionLabel} · claims=${claims.length}`;
+
+  if (vector?.kind === "swap") {
+    const expected = vector.expected_quote ?? {};
+    const expectedWitness = vector.expected_witness ?? {};
+
+    const expectedLower = expected["amount-out-lower"] ?? "n/a";
+    const expectedUpper = expected["amount-out-upper"] ?? "n/a";
+    const expectedEffective = expected["amount-in-effective"] ?? "n/a";
+
+    const liveLower = hasLiveReadonly && quote ? uintValue(quote["amount-out-lower"]) : "n/a";
+    const liveUpper = hasLiveReadonly && quote ? uintValue(quote["amount-out-upper"]) : "n/a";
+
+    bodies[1].textContent =
+      `swap ${vector.direction} in=${vector.amount_in} eff=${expectedEffective} · ` +
+      `expected lower=${expectedLower} upper=${expectedUpper}` +
+      (hasLiveReadonly ? ` · live lower=${liveLower} upper=${liveUpper}` : "");
+
+    const expectedNext = expectedWitness["next-reserve-in-pricing"] ?? "n/a";
+    const expectedTradeLimit = expectedWitness["trade-limit"] ?? expected["trade-limit"] ?? "n/a";
+    const expectedAfterUpper = expectedWitness["reserve-out-after-upper"] ?? "n/a";
+
+    const liveNext =
+      hasLiveReadonly && witness
+        ? uintValue(
+            witness["next-reserve-in-pricing"] ?? witness["reserve-out-input-upper"] ?? { value: "n/a" },
+          )
+        : "n/a";
+
+    bodies[2].textContent =
+      `witness expected tradeLimit=${expectedTradeLimit} next=${expectedNext} outAfterUpper=${expectedAfterUpper}` +
+      (hasLiveReadonly ? ` · live next=${liveNext}` : "");
+  } else if (!vector) {
+    const manualDirection = manualDirectionSelect.value;
+    bodies[1].textContent = `swap ${manualDirection} manual in=${quoteAmountInput.value || "n/a"} · lower=${quote ? uintValue(quote["amount-out-lower"]) : "n/a"} upper=${quote ? uintValue(quote["amount-out-upper"]) : "n/a"} · source=${live.source ?? "artifact"}`;
+    bodies[2].textContent = `witness effective=${witness ? uintValue(witness["amount-in-effective"]) : "n/a"} lower=${witness ? uintValue(witness["amount-out-lower"]) : "n/a"} upper=${witness ? uintValue(witness["amount-out-upper"]) : "n/a"} · next=${witness ? uintValue(witness["next-reserve-in-pricing"] ?? witness["reserve-out-input-upper"] ?? { value: "n/a" }) : "n/a"}`;
+  } else {
+    bodies[1].textContent = `Swap Verifier: select a swap vector (current=${vector.kind})`;
+    bodies[2].textContent = `Witness Explorer: select a swap vector (current=${vector.kind})`;
+  }
+
+  if (vector?.kind === "lp-add") {
+    const expected = vector.expected_result ?? {};
+    const expectedMinted = expected["minted-shares"] ?? "n/a";
+    const expectedNextSupply = expected["share-supply"] ?? "n/a";
+    const liveMinted = hasLiveReadonly && quote ? uintValue(quote["minted-shares"]) : "n/a";
+    const liveNextSupply = hasLiveReadonly && quote ? uintValue(quote["share-supply"]) : "n/a";
+    bodies[3].textContent = `lp-add sbtc=${vector.sbtc_amount} quote=${vector.quote_amount} · expected minted=${expectedMinted} supply=${expectedNextSupply} · live minted=${liveMinted} supply=${liveNextSupply} · pool supply=${uintValue(poolState["share-supply"])} · lp balance(sender)=${lpBalance}`;
+  } else if (vector?.kind === "lp-remove") {
+    const expected = vector.expected_result ?? {};
+    const expectedSbtc = expected["amount-sbtc"] ?? "n/a";
+    const expectedQuote = expected["amount-quote"] ?? "n/a";
+    const liveSbtc = hasLiveReadonly && quote ? uintValue(quote["amount-sbtc"]) : "n/a";
+    const liveQuote = hasLiveReadonly && quote ? uintValue(quote["amount-quote"]) : "n/a";
+    bodies[3].textContent = `lp-remove shares=${vector.share_amount} · expected out={sbtc:${expectedSbtc}, quote:${expectedQuote}} · live out={sbtc:${liveSbtc}, quote:${liveQuote}} · pool supply=${uintValue(poolState["share-supply"])} · lp balance(sender)=${lpBalance}`;
+  } else {
+    bodies[3].textContent = `share supply=${uintValue(poolState["share-supply"])} · lp balance(sender)=${lpBalance} · CL-03: remove-liquidity requires lp-balances[tx-sender] (ERR-LP-BALANCE)`;
+  }
+
+  bodies[4].textContent =
+    `${bundle.snapshot.safety.post_condition_mode} + guard=${safety["clarity4-guard-skeleton-enabled"]?.value ?? bundle.snapshot.safety.guard_enabled} + mathDomain=${safety["math-domain-guard-enabled"]?.value ?? bundle.snapshot.safety.math_domain_guard_enabled}` +
+    ` + sbtc={mock:${typedValueOrNA(binding?.["sbtc-is-mock"])}, requirement:${typedValueOrNA(binding?.["sbtc-is-requirement"])}}` +
+    ` + hashBound={sbtc:${typedValueOrNA(binding?.["sbtc-hash-bound"])}, quote:${typedValueOrNA(binding?.["quote-hash-bound"])}}` +
+    ` + sbtcHash=${live.sbtcHash?.value?.value ?? live.sbtcHash?.value ?? "n/a"}`;
   bodies[5].textContent = `chaos pass=${chaosSummary.pass} fail=${chaosSummary.fail} · updated=${chaosUpdatedAt} · failing=${chaosFailing || "none"}`;
   bodies[6].textContent = `${manifestStatus}; ${claims.map((claim) => claim.id).join(", ")} · P0=${proofP0}, P1=${proofP1}, P2=${proofP2}`;
-  setSource(bundle.sourceLabel);
+  setSource(bundle.sourceLabel, datasetId);
 }
 
 async function hydrateArtifacts() {
   const bundle = await loadArtifactBundle({ loadJson });
+  currentBundle = bundle;
+  populateVectorOptions(vectorList(bundle));
+  ensureDefaultVector(vectorList(bundle));
   render(bundle);
   renderIssues(bundle.issues);
 }
@@ -256,8 +455,16 @@ async function hydrateLive() {
     loadLiveBundle,
     loadArtifactBundle: () => loadArtifactBundle({ loadJson }),
   });
+  currentBundle = bundle;
+  populateVectorOptions(vectorList(bundle));
+  ensureDefaultVector(vectorList(bundle));
   render(bundle);
   renderIssues(bundle.issues);
+}
+
+function rerender() {
+  if (!currentBundle) return;
+  render(currentBundle);
 }
 
 loadArtifactButton.addEventListener("click", async () => {
@@ -275,6 +482,11 @@ loadLiveButton.addEventListener("click", async () => {
     pushMessage(`Live readonly load failed: ${error.message}`);
   }
 });
+
+vectorIdSelect.addEventListener("change", rerender);
+datasetIdSelect.addEventListener("change", rerender);
+manualDirectionSelect.addEventListener("change", rerender);
+quoteAmountInput.addEventListener("input", rerender);
 
 hydrateArtifacts().catch((error) => {
   pushMessage(`Artifact load skipped: ${error.message}`);

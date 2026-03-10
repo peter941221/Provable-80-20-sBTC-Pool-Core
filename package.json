@@ -9,8 +9,10 @@
     "gen:isqrt": "python scripts/gen_isqrt_contract.py",
     "gen:artifacts": "python scripts/gen_artifacts.py",
     "gen:console": "node scripts/export_console_data.mjs",
+    "gen:submission-snapshot": "node scripts/gen_submission_snapshot.mjs",
     "gen:mxs": "python scripts/gen_mxs_manifest.py",
     "artifacts:check": "python scripts/check_manifest.py",
+    "artifacts:check:submission": "python scripts/check_submission_manifest.py",
     "proof:build": "powershell -Command \"cd proof; & $env:USERPROFILE\\.elan\\bin\\lake.exe build\"",
     "test": "vitest run",
     "test:report": "vitest run -- --coverage --costs",
@@ -22,8 +24,8 @@
     "chaos:report": "node scripts/gen_chaos_report.mjs",
     "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\"",
     "validate:week1": "npm run gen:isqrt && npm run gen:artifacts && npm run gen:console && npm run artifacts:check && npm run clarinet:check && npm run test:unit && npm run test:differential",
-    "validate:chaos": "npm run validate:week1 && npm run chaos:report && npm run test:chaos",
-    "validate:full": "npm run validate:chaos && npm run mxs:check && npm run test:mxs && npm run proof:build"
+    "validate:chaos": "npm run validate:week1 && npm run gen:submission-snapshot && npm run chaos:report && npm run test:chaos",
+    "validate:full": "npm run validate:chaos && npm run mxs:check && npm run test:mxs && npm run proof:build && npm run artifacts:check:submission"
   },
   "author": "",
   "license": "ISC",

@@ -55,6 +55,8 @@
       "contract": [
         "add-liquidity",
         "remove-liquidity",
+        "quote-add-shares",
+        "quote-remove-shares",
         "get-lp-balance"
       ],
       "proof": [
@@ -69,6 +71,7 @@
         "tests/differential/reference-model.test.ts"
       ],
       "artifacts": [
+        "artifacts/vector-pack.json",
         "artifacts/judge-console-data.json"
       ],
       "panel": "LP Verifier",
@@ -136,7 +139,8 @@
         "tests/mxs/mainnet-realism.test.ts"
       ],
       "artifacts": [
-        "Clarinet.mxs.toml"
+        "Clarinet.mxs.toml",
+        "artifacts/judge-console-data-sbtc.json"
       ],
       "panel": "Overview",
       "status": "tested"

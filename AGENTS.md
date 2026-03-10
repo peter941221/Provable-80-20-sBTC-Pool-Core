@@ -25,18 +25,22 @@ Project AGENTS
 
 ## 2) Working Commands
 
-- Current workspace state: 已完成双向 swap、LP add/remove + `lp-balances` 份额账、reference model、Judge Console 真实只读导出 + 浏览器 live readonly（失败自动 fallback）、README 与提交物文档、MXS 固定高度断言、P0/P1/P2 proof build + theorem 映射，并已加入显式 `uint128` 数学域保护与边界测试、claim matrix、以及 chaos L1~L5 自动化与 `artifacts/chaos-report.json`
+- Current workspace state: 已完成双向 swap、LP add/remove + `lp-balances` 份额账、reference model、Judge Console（artifact bundle + live readonly + dataset 切换 mock/official sBTC）+ fallback、README Judge Mode 包装、MXS 固定高度断言、P0/P1/P2 proof build + theorem 映射，并已加入显式 `uint128` 数学域保护与边界测试、claim matrix、以及 chaos L1~L5 自动化与 `artifacts/chaos-report.json`；并新增 `artifacts/submission-snapshot.json` 作为提交快照。
 - Working commands:
   - `python scripts/gen_isqrt_contract.py`
   - `python scripts/gen_artifacts.py`
   - `python scripts/check_manifest.py`
+  - `python scripts/check_submission_manifest.py`
   - `clarinet check`
   - `vitest run tests/unit`
   - `vitest run tests/differential`
   - `vitest run tests/chaos`
   - `node scripts/gen_chaos_report.mjs`
+  - `node scripts/gen_submission_snapshot.mjs`
   - `cd proof && lake build`
   - `npm run proof:build`
+  - `npm run gen:submission-snapshot`
+  - `npm run artifacts:check:submission`
   - `npm run validate:week1`
   - `npm run validate:chaos`
   - `npm run validate:full`
@@ -74,13 +78,16 @@ Project AGENTS
   - `docs/security-model.md`
   - `docs/proof-outline.md`
   - `docs/demo-script.md`
+  - `docs/video-script.md`
   - `docs/pitch-outline.md`
   - `docs/chaos-matrix.md`
+  - `docs/screenshots/invariant-reduction.svg`
+  - `docs/screenshots/evidence-chain.svg`
   - `proof/P0_CHECKLIST.md`
   - `proof/lakefile.lean`
   - `proof/Pool820/*.lean`
 - Current requirement wiring:
-  - `Clarinet.toml` includes `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit`
+  - `Clarinet.toml` includes `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-deposit` + `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token`
   - simnet can read `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token`
 - Background source docs:
   - `PRD.md`

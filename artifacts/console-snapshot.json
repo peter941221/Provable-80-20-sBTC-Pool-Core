@@ -7,13 +7,13 @@
   "sample_swap": {
     "amount_in": 1000,
     "amount_in_effective": 997,
-    "amount_out_lower": 38905,
-    "amount_out_upper": 38906
+    "amount_out_lower": 39387,
+    "amount_out_upper": 39388
   },
   "safety": {
     "post_condition_mode": "Deny",
     "guard_enabled": true,
     "math_domain_guard_enabled": true,
-    "binding_status": "mock-sbtc + mock-quote"
+    "binding_status": "mock-sbtc + mock-quote (default) + official sbtc-token dataset"
   }
 }

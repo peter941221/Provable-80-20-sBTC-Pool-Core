@@ -23,10 +23,10 @@ This file is the judge-facing map from claim -> contract -> theorem -> test -> a
 ## CL-03 — LP state transitions stay proportional
 
 - Claim: LP add/remove stays proportional, withdrawals require LP share ownership, and share accounting is closed over `share-supply` + `lp-balances`.
-- Contract: `add-liquidity`, `remove-liquidity`, `get-lp-balance`
+- Contract: `add-liquidity`, `remove-liquidity`, `quote-add-shares`, `quote-remove-shares`, `get-lp-balance`
 - Proof: `addLiquidity_share_closed`, `removeLiquidity_share_closed`, `addLiquidity_reserves_increase`, `removeLiquidity_reserves_decrease`, `add_remove_roundtrip_exact`
 - Tests: `tests/unit/pool-80-20.test.ts`, `tests/differential/reference-model.test.ts`
-- Artifacts: `artifacts/judge-console-data.json`
+- Artifacts: `artifacts/vector-pack.json`, `artifacts/judge-console-data.json`
 - Judge Console: `LP Verifier`
 
 ## CL-04 — Safety surfaces are explicit
@@ -53,7 +53,7 @@ This file is the judge-facing map from claim -> contract -> theorem -> test -> a
 - Contract: `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token`, `SP000000000000000000002Q6VF78.pox-4`
 - Proof: none; this claim is environment-backed.
 - Tests: `tests/unit/sbtc-requirement.test.ts`, `tests/mxs/mainnet-realism.test.ts`
-- Artifacts: `Clarinet.mxs.toml`
+- Artifacts: `Clarinet.mxs.toml`, `artifacts/judge-console-data-sbtc.json`
 - Judge Console: `Overview`
 
 ## CL-07 — Math domain is explicit and enforced

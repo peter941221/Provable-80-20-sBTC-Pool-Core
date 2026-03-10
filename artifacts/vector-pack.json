@@ -1,20 +1,168 @@
 {
   "version": 1,
   "generated_by": "scripts/gen_artifacts.py",
+  "config": {
+    "reserve_sbtc": 200000,
+    "reserve_quote": 2000000,
+    "fee_bps": 30,
+    "max_trade_bps": 1000
+  },
   "vectors": [
     {
+      "id": "swap-sbtc-in-100",
+      "kind": "swap",
+      "direction": "sbtc-in",
+      "amount_in": 100,
+      "expected_quote": {
+        "amount-in-effective": "99",
+        "amount-out-lower": "3955",
+        "amount-out-upper": "3956",
+        "trade-limit": "20000"
+      },
+      "expected_witness": {
+        "amount-in": "100",
+        "amount-in-effective": "99",
+        "amount-out-lower": "3955",
+        "amount-out-upper": "3956",
+        "invariant": "3200000000000000000000000000",
+        "reserve-in": "200000",
+        "reserve-out": "2000000",
+        "trade-limit": "20000",
+        "next-reserve-in-pricing": "200099",
+        "pricing-denominator": "1603170353016335259601",
+        "reserve-out-after-upper": "1996045",
+        "reserve-out-after-lower": "1996044"
+      }
+    },
+    {
       "id": "swap-sbtc-in-1000",
+      "kind": "swap",
       "direction": "sbtc-in",
       "amount_in": 1000,
-      "amount_out_lower": 38905,
-      "amount_out_upper": 38906
+      "expected_quote": {
+        "amount-in-effective": "997",
+        "amount-out-lower": "39387",
+        "amount-out-upper": "39388",
+        "trade-limit": "20000"
+      },
+      "expected_witness": {
+        "amount-in": "1000",
+        "amount-in-effective": "997",
+        "amount-out-lower": "39387",
+        "amount-out-upper": "39388",
+        "invariant": "3200000000000000000000000000",
+        "reserve-in": "200000",
+        "reserve-out": "2000000",
+        "trade-limit": "20000",
+        "next-reserve-in-pricing": "200997",
+        "pricing-denominator": "1632143355969632292081",
+        "reserve-out-after-upper": "1960613",
+        "reserve-out-after-lower": "1960612"
+      }
+    },
+    {
+      "id": "swap-sbtc-in-20000",
+      "kind": "swap",
+      "direction": "sbtc-in",
+      "amount_in": 20000,
+      "expected_quote": {
+        "amount-in-effective": "19940",
+        "amount-out-lower": "632481",
+        "amount-out-upper": "632482",
+        "trade-limit": "20000"
+      },
+      "expected_witness": {
+        "amount-in": "20000",
+        "amount-in-effective": "19940",
+        "amount-out-lower": "632481",
+        "amount-out-upper": "632482",
+        "invariant": "3200000000000000000000000000",
+        "reserve-in": "200000",
+        "reserve-out": "2000000",
+        "trade-limit": "20000",
+        "next-reserve-in-pricing": "219940",
+        "pricing-denominator": "2340005525249932960000",
+        "reserve-out-after-upper": "1367519",
+        "reserve-out-after-lower": "1367518"
+      }
     },
     {
       "id": "swap-quote-in-2000",
+      "kind": "swap",
       "direction": "quote-in",
       "amount_in": 2000,
-      "amount_out_lower": 49,
-      "amount_out_upper": 50
+      "expected_quote": {
+        "amount-in-effective": "1994",
+        "amount-out-lower": "49",
+        "amount-out-upper": "50",
+        "trade-limit": "200000"
+      },
+      "expected_witness": {
+        "amount-in": "2000",
+        "amount-in-effective": "1994",
+        "amount-out-lower": "49",
+        "amount-out-upper": "50",
+        "invariant": "3200000000000000000000000000",
+        "reserve-in": "2000000",
+        "reserve-out": "200000",
+        "trade-limit": "200000",
+        "next-reserve-in-pricing": "2001994",
+        "reserve-out-input-upper": "1598406388830336154854",
+        "reserve-out-input-lower": "1598406388830336154853",
+        "reserve-out-after-upper": "199951",
+        "reserve-out-after-lower": "199950"
+      }
+    },
+    {
+      "id": "swap-quote-in-200000",
+      "kind": "swap",
+      "direction": "quote-in",
+      "amount_in": 200000,
+      "expected_quote": {
+        "amount-in-effective": "199400",
+        "amount-out-lower": "4695",
+        "amount-out-upper": "4696",
+        "trade-limit": "200000"
+      },
+      "expected_witness": {
+        "amount-in": "200000",
+        "amount-in-effective": "199400",
+        "amount-out-lower": "4695",
+        "amount-out-upper": "4696",
+        "invariant": "3200000000000000000000000000",
+        "reserve-in": "2000000",
+        "reserve-out": "200000",
+        "trade-limit": "200000",
+        "next-reserve-in-pricing": "2199400",
+        "reserve-out-input-upper": "1454942256979176138947",
+        "reserve-out-input-lower": "1454942256979176138946",
+        "reserve-out-after-upper": "195305",
+        "reserve-out-after-lower": "195304"
+      }
+    },
+    {
+      "id": "lp-add-1000-10000",
+      "kind": "lp-add",
+      "sbtc_amount": 1000,
+      "quote_amount": 10000,
+      "expected_result": {
+        "minted-shares": "1000",
+        "reserve-sbtc": "201000",
+        "reserve-quote": "2010000",
+        "share-supply": "201000"
+      }
+    },
+    {
+      "id": "lp-remove-1000",
+      "kind": "lp-remove",
+      "share_amount": 1000,
+      "expected_result": {
+        "amount-sbtc": "1000",
+        "amount-quote": "10000",
+        "reserve-sbtc": "199000",
+        "reserve-quote": "1990000",
+        "share-supply": "199000"
+      }
     }
   ]
 }

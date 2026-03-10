@@ -7,6 +7,11 @@ Default mode:
 - loads local artifacts from `artifacts/`
 - hydrates the six judge panels
 
+Dataset mode:
+
+- `mock-sbtc (artifact)`: deterministic local mock binding for replayable vectors
+- `official sbtc-token (requirement)`: shows `sbtc-is-requirement=true` using the official sBTC requirement token
+
 Live readonly mode:
 
 - accepts a Stacks API base URL
