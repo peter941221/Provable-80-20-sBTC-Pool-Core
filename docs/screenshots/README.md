@@ -4,7 +4,7 @@ This folder holds judge-facing visuals for the README / hackathon submission.
 
 Current file:
 
-- `judge-console-panels.svg`: a lightweight generated preview of the Judge Console panels.
+- `judge-console-panels.png`: a high-fidelity screenshot of the Judge Console panels.
 - `invariant-reduction.svg`: the core math reduction (weighted 80/20 -> integer form).
 - `evidence-chain.svg`: the claim -> contract -> tests -> artifacts -> console/proof chain.
 
