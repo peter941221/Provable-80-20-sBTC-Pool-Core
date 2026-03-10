@@ -39,7 +39,7 @@ npm run validate:full
 ### Key Visual Evidence
 ![Invariant reduction](docs/screenshots/invariant-reduction.svg)  
 ![Evidence chain](docs/screenshots/evidence-chain.svg)  
-![Judge Console panel preview](docs/screenshots/judge-console-panels.png)
+![Judge Console panel preview](docs/screenshots/judge-console-panels.png?v=2)
 
 ---
 
