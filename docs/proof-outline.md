@@ -34,7 +34,6 @@ Current code supports future proofs because it already exposes:
 - explicit witness values for readonly quote paths
 - differential reference model comparisons
 - a Lean 4 proof workspace scaffold in `proof/`
-- a P0 checklist in `proof/P0_CHECKLIST.md`
 - a theorem-to-claim mapping in `artifacts/proof-status.json`
 
 ## What Is Already Evidenced

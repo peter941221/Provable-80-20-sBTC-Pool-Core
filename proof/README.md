@@ -18,7 +18,6 @@ week2-proof-engine-complete
 ```text
 proof/
   README.md
-  P0_CHECKLIST.md
   lakefile.lean
   lean-toolchain
   Pool820.lean
@@ -47,7 +46,6 @@ lake build
 This workspace is for proof-side claims only.
 
 - contract implementation truth still lives in `contracts/`
-- project scope truth still lives in `tech_plan.md`
 - submission wording truth still lives in `README.md` and `docs/`
 
 ## Next Steps
