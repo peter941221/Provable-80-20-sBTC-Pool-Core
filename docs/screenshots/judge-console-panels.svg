@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1250" viewBox="0 0 1200 1250" role="img">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+    </pattern>
+    <style>
+      .bg { fill: #09090b; }
+      .title { font: 700 28px ui-monospace, monospace; fill: #fff; text-transform: uppercase; letter-spacing: 0.1em; }
+      .header-sub { font: 400 14px ui-monospace, monospace; fill: #a1a1aa; }
+      .panel-bg { fill: rgba(24, 24, 27, 0.8); stroke: #27272a; stroke-width: 1.5; rx: 8; }
+      .panel-title { font: 700 16px ui-monospace, monospace; fill: #fff; text-transform: uppercase; }
+      .panel-key { font: 400 13px ui-monospace, monospace; fill: #14b8a6; }
+      .panel-val { font: 400 13px ui-monospace, monospace; fill: #d4d4d8; }
+      .panel-line { stroke: #27272a; stroke-width: 1; }
+      .badge { fill: rgba(20, 184, 166, 0.1); stroke: #14b8a6; stroke-width: 1; rx: 4; }
+      .badge-text { font: 600 12px ui-monospace, monospace; fill: #14b8a6; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="1250" class="bg" />
+  <rect width="1200" height="1250" fill="url(#grid)" />
+
+  <!-- Header -->
+  <text x="60" y="60" class="header-sub">PROVABLE 80/20 SBTC POOL CORE</text>
+  <text x="60" y="100" class="title">JUDGE CONSOLE SNAPSHOT</text>
+  <rect x="920" y="75" width="220" height="32" class="badge" />
+  <text x="1030" y="95" class="badge-text" text-anchor="middle">SOURCE: ARTIFACT BUNDLE</text>
+  <path d="M 60 130 L 1140 130" stroke="#27272a" stroke-width="1" stroke-dasharray="4 4" />
+
+  <!-- Grid Row 1 -->
+  <g transform="translate(60, 160)">
+    <rect width="350" height="320" class="panel-bg" />
+    <text x="20" y="35" class="panel-title">01 Overview</text>
+    <line x1="0" y1="50" x2="350" y2="50" class="panel-line" />
+    <text x="20" y="85" class="panel-key">invariant:</text><text x="110" y="85" class="panel-val">x^4 * y = K</text>
+    <text x="20" y="110" class="panel-key">claim:</text><text x="110" y="110" class="panel-val">lower &lt;= ideal &lt;= upper</text>
+    <text x="20" y="135" class="panel-key">reserves:</text><text x="110" y="135" class="panel-val">{sbtc:200000, quote:2000000}</text>
+    <text x="20" y="160" class="panel-key">dataset:</text><text x="110" y="160" class="panel-val">mock-sbtc (artifact)</text>
+    <text x="20" y="185" class="panel-key">commit:</text><text x="110" y="185" class="panel-val">897cd81 (2026-03-10)</text>
+    <text x="20" y="210" class="panel-key">vector:</text><text x="110" y="210" class="panel-val">swap-sbtc-in-1000</text>
+    <text x="20" y="235" class="panel-key">claims:</text><text x="110" y="235" class="panel-val">7 verified</text>
+  </g>
+
+  <g transform="translate(425, 160)">
+    <rect width="350" height="320" class="panel-bg" />
+    <text x="20" y="35" class="panel-title">02 Swap Verifier</text>
+    <line x1="0" y1="50" x2="350" y2="50" class="panel-line" />
+    <text x="20" y="85" class="panel-key">direction:</text><text x="130" y="85" class="panel-val">sbtc-in</text>
+    <text x="20" y="110" class="panel-key">amount_in:</text><text x="130" y="110" class="panel-val">1000</text>
+    <text x="20" y="135" class="panel-key">eff_in:</text><text x="130" y="135" class="panel-val">997</text>
+    <text x="20" y="160" class="panel-key">exp_lower:</text><text x="130" y="160" class="panel-val">39387</text>
+    <text x="20" y="185" class="panel-key">exp_upper:</text><text x="130" y="185" class="panel-val">39388</text>
+    <text x="20" y="210" class="panel-key">write_path:</text><text x="130" y="210" class="panel-val">LOWER (conservative)</text>
+  </g>
+
+  <g transform="translate(790, 160)">
+    <rect width="350" height="320" class="panel-bg" />
+    <text x="20" y="35" class="panel-title">03 Witness Explorer</text>
+    <line x1="0" y1="50" x2="350" y2="50" class="panel-line" />
+    <text x="20" y="85" class="panel-key">trade_limit:</text><text x="140" y="85" class="panel-val">20000</text>
+    <text x="20" y="110" class="panel-key">next_reserve:</text><text x="140" y="110" class="panel-val">200997</text>
+    <text x="20" y="135" class="panel-key">out_upper:</text><text x="140" y="135" class="panel-val">1960613</text>
+    <text x="20" y="160" class="panel-key">denominator:</text><text x="140" y="160" class="panel-val">1.632e21</text>
+    <text x="20" y="185" class="panel-key">status:</text><text x="140" y="185" class="panel-val">INSPECTABLE_OK</text>
+  </g>
+
+  <!-- Grid Row 2 -->
+  <g transform="translate(60, 500)">
+    <rect width="350" height="320" class="panel-bg" />
+    <text x="20" y="35" class="panel-title">04 LP Verifier</text>
+    <line x1="0" y1="50" x2="350" y2="50" class="panel-line" />
+    <text x="20" y="85" class="panel-key">share_supply:</text><text x="140" y="85" class="panel-val">200000</text>
+    <text x="20" y="110" class="panel-key">lp_balance:</text><text x="140" y="110" class="panel-val">200000 (SENDER)</text>
+    <text x="20" y="135" class="panel-key">accounting:</text><text x="140" y="135" class="panel-val">CLOSED_LOOP</text>
+    <text x="20" y="160" class="panel-key">guard:</text><text x="140" y="160" class="panel-val">ERR-LP-BALANCE (CL-03)</text>
+    <text x="20" y="185" class="panel-key">proportional:</text><text x="140" y="185" class="panel-val">STRICT_MATCH</text>
+  </g>
+
+  <g transform="translate(425, 500)">
+    <rect width="350" height="320" class="panel-bg" />
+    <text x="20" y="35" class="panel-title">05 Safety &amp; Bindings</text>
+    <line x1="0" y1="50" x2="350" y2="50" class="panel-line" />
+    <text x="20" y="85" class="panel-key">post_conditions:</text><text x="150" y="85" class="panel-val">DENY_BY_DEFAULT</text>
+    <text x="20" y="110" class="panel-key">clarity4_guards:</text><text x="150" y="110" class="panel-val">ENABLED</text>
+    <text x="20" y="135" class="panel-key">math_domain:</text><text x="150" y="135" class="panel-val">UINT128_GUARDED</text>
+    <text x="20" y="160" class="panel-key">hash_bound:</text><text x="150" y="160" class="panel-val">{sbtc:TRUE, quote:TRUE}</text>
+    <text x="20" y="185" class="panel-key">contract_hash:</text><text x="150" y="185" class="panel-val">VERIFIED_AT_INIT</text>
+  </g>
+
+  <g transform="translate(790, 500)">
+    <rect width="350" height="320" class="panel-bg" />
+    <text x="20" y="35" class="panel-title">06 Chaos Summary</text>
+    <line x1="0" y1="50" x2="350" y2="50" class="panel-line" />
+    <text x="20" y="85" class="panel-key">chaos_pass:</text><text x="130" y="85" class="panel-val">9 / 9</text>
+    <text x="20" y="110" class="panel-key">chaos_fail:</text><text x="130" y="110" class="panel-val">0</text>
+    <text x="20" y="135" class="panel-key">artifact_degr:</text><text x="130" y="135" class="panel-val">PASS (L1)</text>
+    <text x="20" y="160" class="panel-key">live_fallback:</text><text x="130" y="160" class="panel-val">PASS (L2)</text>
+    <text x="20" y="185" class="panel-key">pipeline_drift:</text><text x="130" y="185" class="panel-val">PASS (L5)</text>
+  </g>
+
+  <!-- Full Width Bottom Panel -->
+  <g transform="translate(60, 840)">
+    <rect width="1080" height="350" class="panel-bg" />
+    <text x="20" y="35" class="panel-title">07 Proof Status &amp; Formality</text>
+    <line x1="0" y1="50" x2="1080" y2="50" class="panel-line" />
+    
+    <g transform="translate(20, 80)">
+      <text x="0" y="0" class="panel-key">PROOF_P0 (ARITHMETIC):</text>
+      <text x="250" y="0" class="panel-val">COMPLETED // pow4_monotone, ceilDiv_upper, floorRoot4_le</text>
+      
+      <text x="0" y="40" class="panel-key">PROOF_P1 (SAFETY):</text>
+      <text x="250" y="40" class="panel-val">COMPLETED // uint128_domain, hash_binding_enforcement</text>
+      
+      <text x="0" y="80" class="panel-key">PROOF_P2 (COMPOSITION):</text>
+      <text x="250" y="80" class="panel-val">COMPLETED // add_remove_roundtrip, share_supply_closure</text>
+      
+      <path d="M 0 120 L 1040 120" stroke="#27272a" stroke-width="1" stroke-dasharray="2 2" />
+      
+      <text x="0" y="160" class="panel-key">FORMAL_SYSTEM:</text><text x="250" y="160" class="panel-val">LEAN 4 (LAKE BUILD OK)</text>
+      <text x="0" y="190" class="panel-key">CLAIM_MATRIX:</text><text x="250" y="190" class="panel-val">ALL CLAIMS MAPPED TO THEOREMS IN /proof/</text>
+      <text x="0" y="220" class="panel-key">REPRODUCIBILITY:</text><text x="250" y="220" class="panel-val">RUN 'npm run validate:full' TO VERIFY ALL PROOFS</text>
+    </g>
+  </g>
+
+  <!-- Footer Info -->
+  <text x="600" y="1230" class="header-sub" text-anchor="middle">-- END OF EVIDENCE BUNDLE // 2026-03-10 --</text>
+</svg>
