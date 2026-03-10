@@ -368,76 +368,111 @@ function render(bundle) {
   const manualLabel = `manual ${manualDirectionSelect.value} ${quoteAmountInput.value || "n/a"}`;
   const selectionLabel = vector ? `${vector.id}` : manualLabel;
 
-  bodies[0].textContent =
-    `${overviewInvariant} · ${overviewClaim} · reserves={sbtc:${typedValueOrNA(poolState["reserve-sbtc"])}, quote:${typedValueOrNA(poolState["reserve-quote"])}}` +
-    (datasetId ? ` · ${datasetLabel(datasetId)}` : "") +
-    ` · commit=${submissionCommit} @ ${submissionWhen}` +
-    ` · vector=${selectionLabel} · claims=${claims.length}`;
+  // Formatting helper for terminal-style vertical list
+  const fmt = (lines) => lines.filter(l => l !== null).join("\n");
+
+  bodies[0].innerText = fmt([
+    `invariant: ${overviewInvariant}`,
+    `claim: ${overviewClaim}`,
+    `reserves: {sbtc:${typedValueOrNA(poolState["reserve-sbtc"])}, quote:${typedValueOrNA(poolState["reserve-quote"])}}`,
+    `dataset: ${datasetLabel(datasetId)}`,
+    `commit: ${submissionCommit} (${submissionWhen})`,
+    `active_vector: ${selectionLabel}`,
+    `claims_count: ${claims.length}`
+  ]);
 
   if (vector?.kind === "swap") {
     const expected = vector.expected_quote ?? {};
     const expectedWitness = vector.expected_witness ?? {};
 
-    const expectedLower = expected["amount-out-lower"] ?? "n/a";
-    const expectedUpper = expected["amount-out-upper"] ?? "n/a";
-    const expectedEffective = expected["amount-in-effective"] ?? "n/a";
+    bodies[1].innerText = fmt([
+      `direction: ${vector.direction}`,
+      `amount_in: ${vector.amount_in}`,
+      `effective_in: ${expected["amount-in-effective"] ?? "n/a"}`,
+      `expected_out: {lower:${expected["amount-out-lower"] ?? "n/a"}, upper:${expected["amount-out-upper"] ?? "n/a"}}`,
+      hasLiveReadonly ? `live_out: {lower:${quote ? uintValue(quote["amount-out-lower"]) : "n/a"}, upper:${quote ? uintValue(quote["amount-out-upper"]) : "n/a"}}` : null
+    ]);
 
-    const liveLower = hasLiveReadonly && quote ? uintValue(quote["amount-out-lower"]) : "n/a";
-    const liveUpper = hasLiveReadonly && quote ? uintValue(quote["amount-out-upper"]) : "n/a";
-
-    bodies[1].textContent =
-      `swap ${vector.direction} in=${vector.amount_in} eff=${expectedEffective} · ` +
-      `expected lower=${expectedLower} upper=${expectedUpper}` +
-      (hasLiveReadonly ? ` · live lower=${liveLower} upper=${liveUpper}` : "");
-
-    const expectedNext = expectedWitness["next-reserve-in-pricing"] ?? "n/a";
-    const expectedTradeLimit = expectedWitness["trade-limit"] ?? expected["trade-limit"] ?? "n/a";
-    const expectedAfterUpper = expectedWitness["reserve-out-after-upper"] ?? "n/a";
-
-    const liveNext =
-      hasLiveReadonly && witness
-        ? uintValue(
-            witness["next-reserve-in-pricing"] ?? witness["reserve-out-input-upper"] ?? { value: "n/a" },
-          )
-        : "n/a";
-
-    bodies[2].textContent =
-      `witness expected tradeLimit=${expectedTradeLimit} next=${expectedNext} outAfterUpper=${expectedAfterUpper}` +
-      (hasLiveReadonly ? ` · live next=${liveNext}` : "");
+    bodies[2].innerText = fmt([
+      `trade_limit: ${expectedWitness["trade-limit"] ?? expected["trade-limit"] ?? "n/a"}`,
+      `next_pricing_reserve: ${expectedWitness["next-reserve-in-pricing"] ?? "n/a"}`,
+      `out_after_upper: ${expectedWitness["reserve-out-after-upper"] ?? "n/a"}`,
+      hasLiveReadonly ? `live_next_pricing: ${witness ? uintValue(witness["next-reserve-in-pricing"] ?? witness["reserve-out-input-upper"] ?? { value: "n/a" }) : "n/a"}` : null,
+      `status: witness_inspectable`
+    ]);
   } else if (!vector) {
-    const manualDirection = manualDirectionSelect.value;
-    bodies[1].textContent = `swap ${manualDirection} manual in=${quoteAmountInput.value || "n/a"} · lower=${quote ? uintValue(quote["amount-out-lower"]) : "n/a"} upper=${quote ? uintValue(quote["amount-out-upper"]) : "n/a"} · source=${live.source ?? "artifact"}`;
-    bodies[2].textContent = `witness effective=${witness ? uintValue(witness["amount-in-effective"]) : "n/a"} lower=${witness ? uintValue(witness["amount-out-lower"]) : "n/a"} upper=${witness ? uintValue(witness["amount-out-upper"]) : "n/a"} · next=${witness ? uintValue(witness["next-reserve-in-pricing"] ?? witness["reserve-out-input-upper"] ?? { value: "n/a" }) : "n/a"}`;
+    bodies[1].innerText = fmt([
+      `manual_swap: ${manualDirectionSelect.value}`,
+      `amount_in: ${quoteAmountInput.value || "n/a"}`,
+      `lower_bound: ${quote ? uintValue(quote["amount-out-lower"]) : "n/a"}`,
+      `upper_bound: ${quote ? uintValue(quote["amount-out-upper"]) : "n/a"}`,
+      `source: ${live.source ?? "artifact"}`
+    ]);
+    bodies[2].innerText = fmt([
+      `effective_in: ${witness ? uintValue(witness["amount-in-effective"]) : "n/a"}`,
+      `witness_lower: ${witness ? uintValue(witness["amount-out-lower"]) : "n/a"}`,
+      `witness_upper: ${witness ? uintValue(witness["amount-out-upper"]) : "n/a"}`,
+      `next_pricing: ${witness ? uintValue(witness["next-reserve-in-pricing"] ?? witness["reserve-out-input-upper"] ?? { value: "n/a" }) : "n/a"}`
+    ]);
   } else {
-    bodies[1].textContent = `Swap Verifier: select a swap vector (current=${vector.kind})`;
-    bodies[2].textContent = `Witness Explorer: select a swap vector (current=${vector.kind})`;
+    bodies[1].innerText = `[WAIT] Select a swap vector\ncurrent_kind: ${vector.kind}`;
+    bodies[2].innerText = `[WAIT] Select a swap vector\ncurrent_kind: ${vector.kind}`;
   }
 
   if (vector?.kind === "lp-add") {
     const expected = vector.expected_result ?? {};
-    const expectedMinted = expected["minted-shares"] ?? "n/a";
-    const expectedNextSupply = expected["share-supply"] ?? "n/a";
-    const liveMinted = hasLiveReadonly && quote ? uintValue(quote["minted-shares"]) : "n/a";
-    const liveNextSupply = hasLiveReadonly && quote ? uintValue(quote["share-supply"]) : "n/a";
-    bodies[3].textContent = `lp-add sbtc=${vector.sbtc_amount} quote=${vector.quote_amount} · expected minted=${expectedMinted} supply=${expectedNextSupply} · live minted=${liveMinted} supply=${liveNextSupply} · pool supply=${uintValue(poolState["share-supply"])} · lp balance(sender)=${lpBalance}`;
+    bodies[3].innerText = fmt([
+      `lp_action: add-liquidity`,
+      `input: {sbtc:${vector.sbtc_amount}, quote:${vector.quote_amount}}`,
+      `expected_mint: ${expected["minted-shares"] ?? "n/a"}`,
+      `expected_supply: ${expected["share-supply"] ?? "n/a"}`,
+      hasLiveReadonly ? `live_mint: ${quote ? uintValue(quote["minted-shares"]) : "n/a"}` : null,
+      `sender_balance: ${lpBalance}`,
+      `pool_supply: ${uintValue(poolState["share-supply"])}`
+    ]);
   } else if (vector?.kind === "lp-remove") {
     const expected = vector.expected_result ?? {};
-    const expectedSbtc = expected["amount-sbtc"] ?? "n/a";
-    const expectedQuote = expected["amount-quote"] ?? "n/a";
-    const liveSbtc = hasLiveReadonly && quote ? uintValue(quote["amount-sbtc"]) : "n/a";
-    const liveQuote = hasLiveReadonly && quote ? uintValue(quote["amount-quote"]) : "n/a";
-    bodies[3].textContent = `lp-remove shares=${vector.share_amount} · expected out={sbtc:${expectedSbtc}, quote:${expectedQuote}} · live out={sbtc:${liveSbtc}, quote:${liveQuote}} · pool supply=${uintValue(poolState["share-supply"])} · lp balance(sender)=${lpBalance}`;
+    bodies[3].innerText = fmt([
+      `lp_action: remove-liquidity`,
+      `input_shares: ${vector.share_amount}`,
+      `expected_out: {sbtc:${expected["amount-sbtc"] ?? "n/a"}, quote:${expected["amount-quote"] ?? "n/a"}}`,
+      hasLiveReadonly ? `live_out: {sbtc:${quote ? uintValue(quote["amount-sbtc"]) : "n/a"}, quote:${quote ? uintValue(quote["amount-quote"]) : "n/a"}}` : null,
+      `sender_balance: ${lpBalance}`,
+      `pool_supply: ${uintValue(poolState["share-supply"])}`
+    ]);
   } else {
-    bodies[3].textContent = `share supply=${uintValue(poolState["share-supply"])} · lp balance(sender)=${lpBalance} · CL-03: remove-liquidity requires lp-balances[tx-sender] (ERR-LP-BALANCE)`;
+    bodies[3].innerText = fmt([
+      `share_supply: ${uintValue(poolState["share-supply"])}`,
+      `lp_balance(sender): ${lpBalance}`,
+      `guard: ERR-LP-BALANCE (CL-03)`,
+      `status: proportional_accounting_enforced`
+    ]);
   }
 
-  bodies[4].textContent =
-    `${bundle.snapshot.safety.post_condition_mode} + guard=${safety["clarity4-guard-skeleton-enabled"]?.value ?? bundle.snapshot.safety.guard_enabled} + mathDomain=${safety["math-domain-guard-enabled"]?.value ?? bundle.snapshot.safety.math_domain_guard_enabled}` +
-    ` + sbtc={mock:${typedValueOrNA(binding?.["sbtc-is-mock"])}, requirement:${typedValueOrNA(binding?.["sbtc-is-requirement"])}}` +
-    ` + hashBound={sbtc:${typedValueOrNA(binding?.["sbtc-hash-bound"])}, quote:${typedValueOrNA(binding?.["quote-hash-bound"])}}` +
-    ` + sbtcHash=${live.sbtcHash?.value?.value ?? live.sbtcHash?.value ?? "n/a"}`;
-  bodies[5].textContent = `chaos pass=${chaosSummary.pass} fail=${chaosSummary.fail} · updated=${chaosUpdatedAt} · failing=${chaosFailing || "none"}`;
-  bodies[6].textContent = `${manifestStatus}; ${claims.map((claim) => claim.id).join(", ")} · P0=${proofP0}, P1=${proofP1}, P2=${proofP2}`;
+  bodies[4].innerText = fmt([
+    `post_condition_mode: ${bundle.snapshot.safety.post_condition_mode}`,
+    `clarity4_guards: ${safety["clarity4-guard-skeleton-enabled"]?.value ?? bundle.snapshot.safety.guard_enabled ? "ENABLED" : "DISABLED"}`,
+    `math_domain_guard: ${safety["math-domain-guard-enabled"]?.value ?? bundle.snapshot.safety.math_domain_guard_enabled ? "ENABLED" : "DISABLED"}`,
+    `sbtc_binding: {mock:${typedValueOrNA(binding?.["sbtc-is-mock"])}, official:${typedValueOrNA(binding?.["sbtc-is-requirement"])}}`,
+    `hash_enforcement: {sbtc:${typedValueOrNA(binding?.["sbtc-hash-bound"])}, quote:${typedValueOrNA(binding?.["quote-hash-bound"])}}`,
+    `contract_hash: ${live.sbtcHash?.value?.value ?? live.sbtcHash?.value ?? "n/a"}`
+  ]);
+
+  bodies[5].innerText = fmt([
+    `chaos_pass: ${chaosSummary.pass}`,
+    `chaos_fail: ${chaosSummary.fail}`,
+    `last_updated: ${chaosUpdatedAt}`,
+    `failing_experiments: ${chaosFailing || "NONE"}`
+  ]);
+
+  bodies[6].innerText = fmt([
+    `manifest_status: ${manifestStatus}`,
+    `claims: ${claims.map((claim) => claim.id).join(", ")}`,
+    `proof_p0: ${proofP0}`,
+    `proof_p1: ${proofP1}`,
+    `proof_p2: ${proofP2}`
+  ]);
+
   setSource(bundle.sourceLabel, datasetId);
 }
 

@@ -37,9 +37,9 @@ npm run validate:full
 - `artifacts/submission-snapshot.json`
 
 ### Key Visual Evidence
-![Invariant reduction](docs/screenshots/invariant-reduction.svg)  
-![Evidence chain](docs/screenshots/evidence-chain.svg)  
-![Judge Console panel preview](docs/screenshots/judge-console-panels.png?v=3)
+![Invariant reduction](docs/screenshots/invariant-reduction.svg?v=2)  
+![Evidence chain](docs/screenshots/evidence-chain.svg?v=2)  
+![Judge Console panel preview](docs/screenshots/judge-console-panels.png?v=4)
 
 ---
 
